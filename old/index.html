@@ -1,0 +1,3083 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0e0e12">
+<title>墨游</title>
+<link rel="apple-touch-icon" href="icon.PNG">
+<link rel="icon" href="icon.PNG">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;700&family=Noto+Sans+SC:wght@300;400&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+:root {
+  --bg:    #0e0e12;
+  --bg2:   #14141c;
+  --bg3:   #1c1c28;
+  --border:#282838;
+  --bord2: #38384a;
+  --text:  #e2d9cc;
+  --text2: #8c8298;
+  --text3: #4e4858;
+  --gold:  #c4a050;
+  --gold2: #deb86e;
+  --red:   #c45858;
+  --green: #58a878;
+  --tab-h: 56px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --hdr-h: 50px;
+}
+
+html,body { height:100%; background:var(--bg); color:var(--text); font-family:'Noto Serif SC',serif; overflow:hidden; }
+
+#app { height:100%; display:flex; flex-direction:column; max-width:480px; margin:0 auto; position:relative; }
+
+/* PAGES */
+.page { display:none; flex:1; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; padding-bottom:calc(var(--tab-h) + var(--safe-b) + 16px); }
+.page.active { display:flex; flex-direction:column; }
+#page-game { padding-bottom:0; }
+
+/* TAB BAR */
+#tab-bar { height:calc(var(--tab-h) + var(--safe-b)); background:var(--bg2); border-top:1px solid var(--border); display:flex; align-items:flex-start; padding-top:4px; flex-shrink:0; position:relative; z-index:100; }
+.tab { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 0; cursor:pointer; opacity:.4; transition:opacity .2s; }
+.tab.active { opacity:1; }
+.tab-icon { font-size:20px; line-height:1; }
+.tab-label { font-size:10px; font-family:'Noto Sans SC',sans-serif; color:var(--text2); letter-spacing:.5px; }
+.tab.active .tab-label { color:var(--gold); }
+
+/* PAGE HEADER */
+.page-header { padding:20px 20px 12px; display:flex; align-items:baseline; justify-content:space-between; }
+.page-title { font-size:22px; font-weight:600; letter-spacing:2px; }
+.page-subtitle { font-size:12px; color:var(--text3); font-family:'Noto Sans SC',sans-serif; }
+.section-title { font-size:11px; letter-spacing:3px; color:var(--text3); font-family:'Noto Sans SC',sans-serif; padding:16px 0 10px; border-bottom:1px solid var(--border); margin-bottom:14px; }
+
+/* HISTORY */
+.new-game-btn { display:flex; align-items:center; gap:8px; margin:0 20px 20px; padding:14px 20px; background:linear-gradient(135deg,#1a1a26,#222232); border:1px dashed var(--bord2); border-radius:12px; cursor:pointer; color:var(--gold); font-family:'Noto Serif SC',serif; font-size:14px; letter-spacing:1px; transition:background .2s; }
+.new-game-btn:active { background:var(--bg3); }
+.game-list { padding:0 20px; display:flex; flex-direction:column; gap:12px; }
+.game-card { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:16px; cursor:pointer; display:flex; align-items:center; gap:14px; transition:border-color .15s; }
+.game-card:active { background:var(--bg3); border-color:var(--bord2); }
+.game-emoji { font-size:28px; flex-shrink:0; }
+.game-info { flex:1; min-width:0; }
+.game-name { font-size:15px; font-weight:500; letter-spacing:1px; margin-bottom:4px; }
+.game-meta { font-size:11px; color:var(--text3); font-family:'Noto Sans SC',sans-serif; margin-bottom:6px; }
+.game-tags { display:flex; flex-wrap:wrap; gap:4px; }
+.game-tag { font-size:10px; padding:2px 7px; border-radius:20px; background:var(--bg3); color:var(--text2); font-family:'Noto Sans SC',sans-serif; }
+.game-arrow { color:var(--text3); font-size:18px; }
+
+/* GAME PAGE */
+#game-header { min-height:var(--hdr-h); padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 12px; display:flex; align-items:center; gap:8px; background:var(--bg); border-bottom:1px solid var(--border); flex-shrink:0; }
+#game-world-name { font-size:13px; color:var(--text2); letter-spacing:2px; font-family:'Noto Sans SC',sans-serif; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#game-chapter { font-size:12px; color:var(--gold); font-family:'Noto Sans SC',sans-serif; white-space:nowrap; }
+#game-settings-btn { font-size:19px; color:var(--text3); cursor:pointer; flex-shrink:0; padding:4px; }
+
+#narrative-area { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:20px 20px 12px; display:flex; flex-direction:column; gap:16px; position:relative; }
+
+.narrative-block { animation:fadeUp .4s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+.narrative-text { font-size:15px; line-height:2; letter-spacing:.5px; color:var(--text); text-indent:2em; margin-bottom:.4em; }
+.narrative-action { font-size:13px; color:var(--text2); font-style:italic; text-align:right; font-family:'Noto Sans SC',sans-serif; border-right:2px solid var(--gold); padding-right:10px; }
+.error-block { background:rgba(196,88,88,.1); border:1px solid rgba(196,88,88,.3); border-radius:8px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.error-msg { font-size:13px; color:var(--red); font-family:'Noto Sans SC',sans-serif; flex:1; }
+.retry-btn { font-size:12px; color:var(--gold); font-family:'Noto Sans SC',sans-serif; padding:5px 12px; border:1px solid rgba(196,160,80,.4); border-radius:6px; cursor:pointer; white-space:nowrap; flex-shrink:0; }
+.retry-btn:active { background:rgba(196,160,80,.1); }
+
+.check-result { background:var(--bg2); border-radius:8px; padding:12px 14px; border-left:3px solid var(--bord2); }
+.check-result.success { border-left-color:var(--green); }
+.check-result.fail { border-left-color:var(--red); }
+.check-label { font-size:11px; font-family:'Noto Sans SC',sans-serif; margin-bottom:6px; color:var(--text2); }
+.check-label.success { color:var(--green); }
+.check-label.fail { color:var(--red); }
+
+/* DICE */
+.check-overlay { position:fixed; inset:0; background:rgba(0,0,0,.82); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:999; animation:fadeUp .2s ease; }
+.dice-wrap { display:flex; flex-direction:column; align-items:center; gap:24px; }
+.dice { width:88px; height:88px; border:2px solid var(--gold); border-radius:18px; display:flex; align-items:center; justify-content:center; font-size:40px; animation:diceRoll .55s ease; background:var(--bg2); box-shadow:0 0 30px rgba(196,160,80,.2); }
+@keyframes diceRoll { 0%{transform:rotate(0) scale(.4);opacity:0} 60%{transform:rotate(200deg) scale(1.15)} 100%{transform:rotate(360deg) scale(1);opacity:1} }
+.check-info { text-align:center; font-family:'Noto Sans SC',sans-serif; }
+.ci-stat { font-size:13px; color:var(--text2); margin-bottom:6px; }
+.ci-score { font-size:38px; font-weight:700; letter-spacing:2px; }
+.ci-score.success { color:var(--green); }
+.ci-score.fail { color:var(--red); }
+.ci-vs { font-size:12px; color:var(--text3); margin-top:4px; }
+.ci-verdict { font-size:20px; margin-top:14px; font-weight:600; letter-spacing:5px; }
+.ci-verdict.success { color:var(--green); }
+.ci-verdict.fail { color:var(--red); }
+
+/* OPTIONS */
+#option-area { padding:12px 16px; background:var(--bg); border-top:1px solid var(--border); display:flex; flex-direction:column; gap:8px; padding-bottom:calc(12px + var(--safe-b)); flex-shrink:0; }
+.options-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.option-btn { background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:10px 12px; color:var(--text); font-family:'Noto Serif SC',serif; font-size:13px; line-height:1.5; cursor:pointer; text-align:left; transition:all .15s; letter-spacing:.3px; width:100%; }
+.option-btn:active { background:var(--bg3); border-color:var(--gold); color:var(--gold2); }
+.free-input-row { display:flex; gap:8px; }
+#free-input { flex:1; background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:10px 14px; color:var(--text); font-family:'Noto Serif SC',serif; font-size:16px; outline:none; -webkit-appearance:none; resize:none; min-height:42px; max-height:100px; }
+#free-input:focus { border-color:var(--bord2); }
+#free-input::placeholder { color:var(--text3); }
+
+/* GAME SETTINGS MODAL */
+.modal-tabs { display:flex; border-bottom:1px solid var(--border); }
+.mtab { flex:1; padding:11px 0; text-align:center; font-size:12px; font-family:'Noto Sans SC',sans-serif; color:var(--text3); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all .15s; }
+.mtab.active { color:var(--gold); border-bottom-color:var(--gold); }
+.gset-section { padding:16px 20px; }
+.style-row { display:flex; align-items:center; justify-content:space-between; padding:11px 0; border-bottom:1px solid var(--border); gap:12px; }
+.style-row:last-child { border-bottom:none; }
+.style-left { flex:1; min-width:0; }
+.style-lbl { font-size:13px; color:var(--text); font-family:'Noto Sans SC',sans-serif; }
+.style-hint { font-size:10px; color:var(--text3); font-family:'Noto Sans SC',sans-serif; margin-top:2px; }
+.style-select { background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:6px 10px; color:var(--text); font-family:'Noto Sans SC',sans-serif; font-size:13px; outline:none; -webkit-appearance:none; appearance:none; }
+.toggle-wrap { width:42px; height:24px; border-radius:12px; background:var(--bg3); border:1px solid var(--border); cursor:pointer; position:relative; transition:background .2s; flex-shrink:0; }
+.toggle-wrap.on { background:var(--gold); border-color:var(--gold); }
+.toggle-wrap::after { content:''; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:9px; background:#fff; transition:left .2s; }
+.toggle-wrap.on::after { left:20px; }
+.import-row { display:flex; gap:8px; margin-top:8px; }
+.import-btn { padding:9px 14px; border-radius:8px; border:1px solid var(--border); background:var(--bg3); color:var(--text2); font-family:'Noto Sans SC',sans-serif; font-size:12px; cursor:pointer; text-align:center; }
+.import-btn:active { background:var(--border); }
+.npc-imported { background:rgba(88,168,120,.08); border:1px solid rgba(88,168,120,.25); border-radius:8px; padding:8px 12px; margin-top:8px; font-size:12px; color:var(--green); font-family:'Noto Sans SC',sans-serif; line-height:1.7; }
+.btn-danger { flex:1; padding:13px; border-radius:10px; border:1px solid var(--red); background:transparent; color:var(--red); font-family:'Noto Serif SC',serif; font-size:14px; cursor:pointer; text-align:center; }
+#send-btn { background:var(--bg3); border:1px solid var(--bord2); border-radius:10px; width:42px; height:42px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--gold); font-size:18px; flex-shrink:0; transition:background .15s; }
+#send-btn:active { background:var(--border); }
+
+/* INTERVENE */
+.intervene-btn { padding:13px 16px; background:var(--bg3); border:1px solid var(--border); border-radius:10px; color:var(--text); font-family:'Noto Sans SC',sans-serif; font-size:13px; cursor:pointer; }
+.intervene-btn:active { background:var(--border); }
+
+/* PHONE FRAGMENT */
+.phone-frame { background:var(--bg3); border-radius:16px; overflow:hidden; border:1px solid var(--bord2); }
+.phone-app-tabs { display:flex; border-bottom:1px solid var(--border); }
+.phone-tab { flex:1; padding:9px 0; text-align:center; font-size:11px; font-family:'Noto Sans SC',sans-serif; color:var(--text3); cursor:pointer; }
+.phone-tab.active { color:var(--gold); border-bottom:2px solid var(--gold); }
+.phone-content { padding:12px; }
+.phone-chat-item { margin-bottom:16px; }
+.phone-contact { font-size:11px; color:var(--text3); font-family:'Noto Sans SC',sans-serif; margin-bottom:6px; }
+.phone-bubble-row { display:flex; gap:6px; margin-bottom:3px; }
+.phone-bubble-row.me { justify-content:flex-end; }
+.phone-bubble { max-width:72%; padding:7px 10px; border-radius:12px; font-size:12px; font-family:'Noto Sans SC',sans-serif; line-height:1.5; }
+.phone-bubble.them { background:var(--bg2); color:var(--text2); border-radius:4px 12px 12px 12px; }
+.phone-bubble.me { background:rgba(196,160,80,.2); color:var(--text); border-radius:12px 4px 12px 12px; }
+.phone-comment { font-size:11px; color:var(--text3); font-family:'Noto Sans SC',sans-serif; font-style:italic; margin-top:5px; padding-left:8px; border-left:2px solid var(--border); }
+.memo-item { background:var(--bg2); border-radius:8px; padding:10px 12px; margin-bottom:8px; font-size:12px; font-family:'Noto Sans SC',sans-serif; color:var(--text2); line-height:1.7; }
+.shop-item { display:flex; justify-content:space-between; align-items:baseline; padding:8px 0; border-bottom:1px solid var(--border); }
+.shop-item:last-child { border-bottom:none; }
+.shop-name { font-size:12px; font-family:'Noto Sans SC',sans-serif; color:var(--text); }
+.shop-price { font-size:11px; color:var(--text3); font-family:'Noto Sans SC',sans-serif; }
+
+/* FEED FRAGMENT */
+.feed-card { background:var(--bg3); border-radius:12px; padding:12px; margin-bottom:12px; }
+.feed-tag { display:inline-block; font-size:10px; padding:2px 8px; border-radius:10px; background:rgba(196,160,80,.12); color:var(--gold); font-family:'Noto Sans SC',sans-serif; margin-bottom:6px; }
+.feed-text { font-size:13px; color:var(--text); font-family:'Noto Sans SC',sans-serif; line-height:1.7; margin-bottom:8px; }
+.feed-imgs { font-size:11px; color:var(--text3); font-family:'Noto Sans SC',sans-serif; margin-bottom:8px; }
+.feed-comments { border-top:1px solid var(--border); padding-top:8px; }
+.feed-comment { font-size:11px; color:var(--text2); font-family:'Noto Sans SC',sans-serif; line-height:1.6; margin-bottom:4px; }
+.feed-comment .at { color:var(--gold); }
+
+/* TIMELINE FRAGMENT */
+.tl-post { padding:12px 0; border-bottom:1px solid var(--border); }
+.tl-post:last-child { border-bottom:none; }
+.tl-date { font-size:10px; color:var(--text3); font-family:'Noto Sans SC',sans-serif; margin-bottom:5px; }
+.tl-text { font-size:13px; color:var(--text); font-family:'Noto Sans SC',sans-serif; line-height:1.7; }
+.tl-imgs { font-size:11px; color:var(--text3); font-family:'Noto Sans SC',sans-serif; margin-top:4px; }
+
+/* PORTRAIT */
+.portrait-stage { position:absolute; right:8px; bottom:8px; width:100px; height:150px; z-index:10; cursor:pointer; }
+.portrait-img { width:100px; height:150px; object-fit:contain; object-position:bottom; border-radius:8px; transition:opacity .4s, transform .4s; opacity:0; transform:translateY(10px); pointer-events:none; }
+.portrait-img.visible { opacity:.88; transform:translateY(0); }
+.portrait-name-tag { position:absolute; bottom:3px; right:3px; font-size:9px; color:rgba(255,255,255,.5); font-family:'Noto Sans SC',sans-serif; background:rgba(0,0,0,.5); padding:1px 5px; border-radius:4px; pointer-events:none; }
+.portrait-toggle-btn { position:absolute; top:3px; right:3px; font-size:10px; color:rgba(255,255,255,.4); background:rgba(0,0,0,.45); border:none; border-radius:4px; padding:2px 5px; cursor:pointer; font-family:'Noto Sans SC',sans-serif; display:none; }
+.portrait-stage:active .portrait-toggle-btn { display:block; }
+.export-item { border:1px solid var(--border); border-radius:10px; overflow:hidden; margin-bottom:8px; }
+.export-hdr { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; cursor:pointer; background:var(--bg3); }
+.export-hdr:active { background:var(--border); }
+.export-body { padding:12px 14px; border-top:1px solid var(--border); }
+.export-preview { width:100%; height:80px; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px 10px; color:var(--text3); font-family:'Noto Sans SC',sans-serif; font-size:11px; line-height:1.6; outline:none; resize:none; cursor:text; }
+
+/* LOADING */
+.loading-dots { display:flex; align-items:center; gap:5px; padding:16px 0; }
+.loading-dots span { width:6px; height:6px; border-radius:50%; background:var(--text3); animation:dotBounce 1.2s infinite; }
+.loading-dots span:nth-child(2){animation-delay:.2s}
+.loading-dots span:nth-child(3){animation-delay:.4s}
+@keyframes dotBounce { 0%,80%,100%{transform:translateY(0);opacity:.4} 40%{transform:translateY(-6px);opacity:1} }
+
+/* CHARACTER PAGE */
+.char-section { padding:0 20px 16px; }
+.npc-card { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:12px; }
+.npc-header { display:flex; align-items:baseline; gap:8px; margin-bottom:10px; }
+.npc-name { font-size:16px; font-weight:500; letter-spacing:1px; }
+.npc-desc { font-size:12px; color:var(--text2); font-family:'Noto Sans SC',sans-serif; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.affection-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.aff-label { font-size:11px; color:var(--text3); font-family:'Noto Sans SC',sans-serif; white-space:nowrap; }
+.aff-bar { flex:1; height:4px; background:var(--bg3); border-radius:2px; overflow:hidden; }
+.aff-fill { height:100%; border-radius:2px; background:linear-gradient(90deg,var(--red),var(--gold),var(--gold2)); transition:width .5s ease; }
+.aff-num { font-size:12px; color:var(--gold); font-family:'Noto Sans SC',sans-serif; white-space:nowrap; }
+.event-tags { display:flex; flex-wrap:wrap; gap:4px; }
+.event-tag { font-size:10px; padding:2px 7px; border-radius:20px; background:var(--bg3); color:var(--text3); font-family:'Noto Sans SC',sans-serif; }
+
+/* CHARACTER MEMO */
+.memo-row { margin-top:10px; border-top:1px solid var(--border); padding-top:9px; }
+.memo-hdr { display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+.memo-hdr-left { display:flex; align-items:center; gap:6px; }
+.memo-label { font-size:10px; color:var(--text3); font-family:'Noto Sans SC',sans-serif; letter-spacing:1px; }
+.memo-badge { font-size:9px; padding:1px 6px; border-radius:10px; background:rgba(196,160,80,.12); color:var(--gold); font-family:'Noto Sans SC',sans-serif; }
+.memo-badge.updating { background:rgba(88,168,120,.12); color:var(--green); }
+.memo-toggle { font-size:11px; color:var(--text3); font-family:'Noto Sans SC',sans-serif; }
+.memo-preview { font-size:11px; color:var(--text3); font-family:'Noto Sans SC',sans-serif; margin-top:5px; line-height:1.6; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+.memo-body { margin-top:8px; }
+.memo-text { font-size:12px; color:var(--text2); font-family:'Noto Sans SC',sans-serif; line-height:1.8; white-space:pre-wrap; }
+.memo-actions { display:flex; gap:6px; margin-top:8px; }
+.memo-btn { font-size:11px; color:var(--text3); font-family:'Noto Sans SC',sans-serif; padding:4px 10px; border:1px solid var(--border); border-radius:6px; cursor:pointer; background:transparent; }
+.memo-btn:active { background:var(--bg3); }
+.memo-btn.primary { color:var(--gold); border-color:rgba(196,160,80,.4); }
+.memo-edit-area { width:100%; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:8px 10px; color:var(--text); font-family:'Noto Sans SC',sans-serif; font-size:12px; line-height:1.8; outline:none; resize:none; min-height:80px; margin-top:6px; }
+
+.player-card { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:12px; }
+.player-name-row { display:flex; align-items:baseline; gap:8px; margin-bottom:14px; }
+.player-name { font-size:18px; font-weight:500; letter-spacing:2px; }
+.player-bg-text { font-size:12px; color:var(--text2); font-family:'Noto Sans SC',sans-serif; }
+.stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.stat-item { display:flex; flex-direction:column; gap:4px; }
+.s-name { font-size:11px; color:var(--text3); font-family:'Noto Sans SC',sans-serif; letter-spacing:1px; }
+.s-bar-row { display:flex; align-items:center; gap:6px; }
+.s-bar { flex:1; height:3px; background:var(--bg3); border-radius:2px; overflow:hidden; }
+.s-fill { height:100%; border-radius:2px; background:var(--gold); transition:width .5s; }
+.s-val { font-size:13px; color:var(--text); font-family:'Noto Sans SC',sans-serif; }
+.player-tags { display:flex; flex-wrap:wrap; gap:5px; }
+.p-tag { font-size:11px; padding:3px 9px; border-radius:20px; background:rgba(196,160,80,.1); border:1px solid rgba(196,160,80,.3); color:var(--gold); font-family:'Noto Sans SC',sans-serif; }
+
+/* FRAGMENT PAGE */
+.frag-toolbar { padding:0 20px 12px; display:flex; align-items:center; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; flex-shrink:0; }
+.frag-toolbar::-webkit-scrollbar { display:none; }
+.frag-filter { padding:6px 14px; border-radius:20px; border:1px solid var(--border); background:transparent; color:var(--text2); font-family:'Noto Sans SC',sans-serif; font-size:12px; white-space:nowrap; cursor:pointer; transition:all .15s; flex-shrink:0; }
+.frag-filter.active { background:var(--bg3); border-color:var(--gold); color:var(--gold); }
+.gen-frag-btn { display:flex; align-items:center; gap:6px; margin:0 20px 14px; padding:12px 16px; background:linear-gradient(135deg,rgba(196,160,80,.1),rgba(196,160,80,.05)); border:1px solid rgba(196,160,80,.3); border-radius:10px; cursor:pointer; color:var(--gold); font-family:'Noto Sans SC',sans-serif; font-size:13px; letter-spacing:1px; flex-shrink:0; }
+.gen-frag-btn:active { background:rgba(196,160,80,.15); }
+.fragment-list { padding:0 20px; display:flex; flex-direction:column; gap:12px; }
+.fragment-card { background:var(--bg2); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+.frag-header { padding:10px 14px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); }
+.frag-meta { display:flex; align-items:center; gap:8px; }
+.frag-npc { font-size:13px; font-weight:500; letter-spacing:1px; }
+.frag-type-badge { font-size:10px; padding:2px 7px; border-radius:20px; background:var(--bg3); color:var(--text3); font-family:'Noto Sans SC',sans-serif; }
+.frag-chapter-ref { font-size:11px; color:var(--text3); font-family:'Noto Sans SC',sans-serif; }
+.frag-content { padding:14px; font-size:13px; line-height:1.9; color:var(--text2); letter-spacing:.3px; white-space:pre-line; }
+
+/* SETTINGS PAGE */
+.settings-section { padding:0 20px 20px; }
+.setting-item { padding:14px 0; border-bottom:1px solid var(--border); }
+.setting-item:last-child { border-bottom:none; }
+.setting-label { font-size:12px; color:var(--text3); font-family:'Noto Sans SC',sans-serif; letter-spacing:1px; margin-bottom:8px; }
+.provider-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
+.provider-btn { padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--bg2); color:var(--text2); font-family:'Noto Sans SC',sans-serif; font-size:12px; text-align:center; cursor:pointer; transition:all .15s; }
+.provider-btn.active { border-color:var(--gold); color:var(--gold); background:rgba(196,160,80,.08); }
+.setting-input { width:100%; background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-family:'Noto Sans SC',sans-serif; font-size:13px; outline:none; -webkit-appearance:none; }
+.setting-input:focus { border-color:var(--bord2); }
+.model-select { width:100%; background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-family:'Noto Sans SC',sans-serif; font-size:13px; outline:none; -webkit-appearance:none; appearance:none; }
+
+/* MODAL */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.72); display:flex; flex-direction:column; justify-content:flex-end; z-index:500; animation:fadeUp .2s ease; }
+.modal-sheet { background:var(--bg2); border-radius:20px 20px 0 0; border-top:1px solid var(--border); max-height:92vh; overflow-y:auto; padding-bottom:calc(20px + var(--safe-b)); }
+.modal-handle { width:36px; height:4px; background:var(--bord2); border-radius:2px; margin:12px auto 16px; }
+.modal-title { font-size:17px; font-weight:500; letter-spacing:2px; padding:0 20px 16px; border-bottom:1px solid var(--border); margin-bottom:16px; }
+.modal-body { padding:0 20px; }
+.form-group { margin-bottom:16px; }
+.form-label { font-size:11px; color:var(--text3); letter-spacing:2px; font-family:'Noto Sans SC',sans-serif; margin-bottom:8px; display:block; }
+.form-input { width:100%; background:var(--bg3); border:1px solid var(--border); border-radius:10px; padding:12px 14px; color:var(--text); font-family:'Noto Serif SC',serif; font-size:14px; outline:none; -webkit-appearance:none; }
+.form-input:focus { border-color:var(--bord2); }
+.form-textarea { resize:none; min-height:80px; line-height:1.7; }
+.hint-text { font-size:11px; color:var(--text3); font-family:'Noto Sans SC',sans-serif; margin-top:6px; line-height:1.6; }
+.stats-builder { display:flex; flex-direction:column; gap:8px; margin-bottom:8px; }
+.stat-row { display:flex; gap:8px; align-items:center; }
+.stat-name-inp { flex:1; }
+.stat-val-inp { width:70px; text-align:center; }
+.rm-btn { width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:6px; border:1px solid var(--border); background:transparent; color:var(--text3); cursor:pointer; font-size:16px; flex-shrink:0; }
+.add-btn { padding:8px; border-radius:8px; border:1px dashed var(--border); background:transparent; color:var(--text3); font-family:'Noto Sans SC',sans-serif; font-size:12px; cursor:pointer; text-align:center; width:100%; }
+.npc-builder { display:flex; flex-direction:column; gap:10px; margin-bottom:10px; }
+.npc-item { background:var(--bg3); border:1px solid var(--border); border-radius:10px; padding:12px; }
+.npc-item-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.npc-item-name { font-size:14px; letter-spacing:1px; }
+.wizard-steps { display:flex; gap:6px; padding:0 20px 16px; justify-content:center; }
+.wz-step { width:20px; height:3px; border-radius:2px; background:var(--bord2); transition:background .3s; }
+.wz-step.done { background:var(--gold); }
+.wizard-nav { display:flex; gap:8px; padding:16px 0 0; }
+.btn-secondary { flex:1; padding:13px; border-radius:10px; border:1px solid var(--border); background:transparent; color:var(--text2); font-family:'Noto Serif SC',serif; font-size:14px; cursor:pointer; text-align:center; }
+.btn-primary { flex:2; padding:13px; border-radius:10px; border:none; background:linear-gradient(135deg,#c4a050,#deb86e); color:#0e0e12; font-family:'Noto Serif SC',serif; font-size:14px; font-weight:600; cursor:pointer; letter-spacing:1px; text-align:center; }
+
+/* FRAG GEN */
+.frag-type-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
+.frag-type-btn { padding:12px 10px; border-radius:10px; border:1px solid var(--border); background:var(--bg3); color:var(--text2); font-family:'Noto Serif SC',serif; font-size:13px; text-align:center; cursor:pointer; transition:all .15s; }
+.frag-type-btn.active { border-color:var(--gold); color:var(--gold); background:rgba(196,160,80,.08); }
+.npc-sel-grid { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+.npc-sel-btn { padding:7px 14px; border-radius:20px; border:1px solid var(--border); background:transparent; color:var(--text2); font-family:'Noto Serif SC',serif; font-size:13px; cursor:pointer; transition:all .15s; }
+.npc-sel-btn.active { border-color:var(--gold); color:var(--gold); }
+
+/* UTILS */
+.empty-state { padding:40px 20px; text-align:center; color:var(--text3); font-family:'Noto Sans SC',sans-serif; font-size:13px; line-height:2; }
+.empty-icon { font-size:32px; margin-bottom:10px; }
+.toast { position:fixed; top:calc(20px + env(safe-area-inset-top,0px)); left:50%; transform:translateX(-50%); background:var(--bg3); border:1px solid var(--bord2); border-radius:8px; padding:10px 20px; font-size:13px; font-family:'Noto Sans SC',sans-serif; color:var(--text); z-index:9999; white-space:nowrap; animation:toastIn .3s ease, toastOut .3s ease 2s forwards; }
+@keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(-10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+@keyframes toastOut { to{opacity:0;transform:translateX(-50%) translateY(-10px)} }
+*::-webkit-scrollbar { display:none; }
+* { scrollbar-width:none; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HISTORY -->
+  <div id="page-history" class="page active">
+    <div class="page-header">
+      <span class="page-title">墨游</span>
+      <span class="page-subtitle" id="hist-sub">0 个故事</span>
+    </div>
+    <div class="new-game-btn" onclick="openWizard()"><span>＋</span><span>开始新的故事</span></div>
+    <div class="game-list" id="game-list"></div>
+  </div>
+
+  <!-- GAME -->
+  <div id="page-game" class="page">
+    <div id="game-header">
+      <span id="game-world-name">—</span>
+      <span id="game-chapter">序章</span>
+      <span id="game-intervene-btn" onclick="openIntervene()" style="font-size:17px;color:var(--text3);cursor:pointer;padding:4px;flex-shrink:0" title="干预">✎</span>
+      <span id="game-settings-btn" onclick="openGset()">⚙</span>
+    </div>
+    <div id="narrative-area" style="position:relative">
+      <div class="empty-state"><div class="empty-icon">📖</div>故事从这里开始……</div>
+      <div class="portrait-stage" id="portrait-stage" onclick="togglePortrait()" style="display:none">
+        <img id="portrait-img" class="portrait-img" src="" alt="">
+        <div class="portrait-name-tag" id="portrait-name-tag"></div>
+      </div>
+    </div>
+    <div id="option-area">
+      <div id="options-collapse-row" style="display:none;align-items:center;justify-content:flex-end;margin-bottom:4px">
+        <span id="options-toggle-btn" onclick="toggleOptions()" style="font-size:11px;color:var(--text3);font-family:'Noto Sans SC',sans-serif;cursor:pointer;padding:2px 8px;border:1px solid var(--border);border-radius:10px"></span>
+      </div>
+      <div class="options-grid" id="options-grid"></div>
+      <div class="free-input-row">
+        <textarea id="free-input" placeholder="自由行动……" rows="1"></textarea>
+        <div id="send-btn" onclick="sendFreeInput()">↑</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARACTER -->
+  <div id="page-character" class="page">
+    <div class="page-header"><span class="page-title">角色</span></div>
+    <div class="char-section">
+      <div class="section-title">我的状态</div>
+      <div id="player-panel"></div>
+      <div class="section-title">登场人物</div>
+      <div id="npc-list"></div>
+    </div>
+  </div>
+
+  <!-- FRAGMENT -->
+  <div id="page-fragment" class="page">
+    <div class="page-header" style="flex-shrink:0"><span class="page-title">碎片集</span></div>
+    <div class="gen-frag-btn" onclick="openFragGen()">✦ 生成新碎片</div>
+    <div class="frag-toolbar" id="frag-filters"></div>
+    <div class="fragment-list" id="fragment-list"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="page-settings" class="page">
+    <div class="page-header"><span class="page-title">设置</span></div>
+    <div id="recovery-banner" style="display:none;margin:12px 20px;background:rgba(196,80,80,.12);border:1px solid rgba(196,80,80,.3);border-radius:10px;padding:12px 14px">
+      <div style="font-size:13px;color:#e07070;font-family:'Noto Sans SC',sans-serif;margin-bottom:8px">检测到本地有存档数据但未能加载，点击下方按钮恢复：</div>
+      <div class="btn-primary" style="font-size:13px;cursor:pointer" onclick="emergencyRecover()">🔄 恢复存档</div>
+    </div>
+    <div class="settings-section">
+      <div class="section-title">存档备份</div>
+      <div class="setting-item" style="flex-direction:column;align-items:stretch;gap:8px">
+        <div class="btn-secondary" style="text-align:center;cursor:pointer;padding:12px" onclick="exportAllSaves()">📦 导出全部存档</div>
+        <div class="btn-secondary" style="text-align:center;cursor:pointer;padding:12px" onclick="document.getElementById('fi-restore').click()">📂 导入全部存档</div>
+        <div class="hint-text">更新前建议先导出备份，导入会覆盖当前所有数据</div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="section-title">AI 服务商</div>
+      <div class="setting-item">
+        <div class="provider-grid" id="provider-grid">
+          <div class="provider-btn active" data-p="deepseek" onclick="selectProvider('deepseek')">DeepSeek</div>
+          <div class="provider-btn" data-p="claude" onclick="selectProvider('claude')">Claude</div>
+          <div class="provider-btn" data-p="openai" onclick="selectProvider('openai')">GPT</div>
+          <div class="provider-btn" data-p="gemini" onclick="selectProvider('gemini')">Gemini</div>
+        </div>
+      </div>
+      <div class="setting-item">
+        <div class="setting-label">API KEY</div>
+        <input class="setting-input" type="password" id="api-key-input" placeholder="输入 API Key" onchange="saveApiKey()">
+        <div class="hint-text" id="key-hint"></div>
+      </div>
+      <div class="setting-item" id="base-url-item">
+        <div class="setting-label">API 地址（可选）</div>
+        <input class="setting-input" type="text" id="base-url-input" placeholder="留空=官方地址，填了就用这个（第三方中转/自建代理）" onchange="saveBaseUrl()">
+        <div class="hint-text" id="base-url-hint"></div>
+      </div>
+      <div class="setting-item">
+        <div class="setting-label">模型</div>
+        <input class="model-select" list="model-datalist" id="model-select" onchange="saveModel()" placeholder="输入或选择模型名">
+        <datalist id="model-datalist"></datalist>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB BAR -->
+  <div id="tab-bar">
+    <div class="tab active" onclick="switchTab('history')" data-tab="history">
+      <span class="tab-icon">📚</span><span class="tab-label">故事</span>
+    </div>
+    <div class="tab" onclick="switchTab('game')" data-tab="game">
+      <span class="tab-icon">📖</span><span class="tab-label">游玩</span>
+    </div>
+    <div class="tab" onclick="switchTab('character')" data-tab="character">
+      <span class="tab-icon">👤</span><span class="tab-label">角色</span>
+    </div>
+    <div class="tab" onclick="switchTab('fragment')" data-tab="fragment">
+      <span class="tab-icon">🎴</span><span class="tab-label">碎片集</span>
+    </div>
+    <div class="tab" onclick="switchTab('settings')" data-tab="settings">
+      <span class="tab-icon">⚙️</span><span class="tab-label">设置</span>
+    </div>
+  </div>
+</div>
+
+<!-- GAME SETTINGS MODAL -->
+<div id="gset-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeGset()">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title" style="margin-bottom:0">游戏设置</div>
+    <div class="modal-tabs">
+      <div class="mtab active" data-gt="rules" onclick="switchGsetTab('rules')">规则</div>
+      <div class="mtab" data-gt="chars" onclick="switchGsetTab('chars')">角色</div>
+      <div class="mtab" data-gt="world" onclick="switchGsetTab('world')">设定</div>
+    </div>
+    <div id="gset-body"></div>
+  </div>
+</div>
+
+<!-- NPC IMPORT PASTE MODAL -->
+<div id="npc-paste-modal" class="modal-overlay" style="display:none;z-index:600" onclick="if(event.target===this)closeNpcPaste()">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">粘贴角色设定</div>
+    <div class="modal-body" style="padding-top:16px">
+      <div class="form-group">
+        <label class="form-label">角色设定文本</label>
+        <textarea class="form-input form-textarea" id="npc-paste-text" placeholder="把角色设定内容粘贴在这里，AI将自动解析……" style="min-height:140px"></textarea>
+        <div class="hint-text">支持任意格式，AI自动提取姓名、描述、性格等信息</div>
+      </div>
+      <div id="npc-paste-result"></div>
+      <div class="wizard-nav" id="npc-paste-nav">
+        <div class="btn-secondary" onclick="closeNpcPaste()">取消</div>
+        <div class="btn-primary" onclick="parseNpcPaste()">AI解析并导入</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FILE INPUTS -->
+<input type="file" id="fi-world" accept=".txt,.md" style="display:none" onchange="handleWorldFile(event)">
+<input type="file" id="fi-npc" accept=".txt,.md" style="display:none" onchange="handleNpcFile(event)">
+<input type="file" id="fi-restore" accept=".json" style="display:none" onchange="importAllSaves(event)">
+<input type="file" id="fi-json" accept=".json" style="display:none" onchange="handleJsonImport(event)">
+
+<!-- WIZARD MODAL -->
+<div id="wizard-modal" class="modal-overlay" style="display:none" onclick="wzBgClick(event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="wizard-steps" id="wz-steps"></div>
+    <div id="wz-body"></div>
+  </div>
+</div>
+
+<!-- FRAG GEN MODAL -->
+<div id="frag-modal" class="modal-overlay" style="display:none" onclick="fgBgClick(event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">生成碎片</div>
+    <div class="modal-body" style="padding-top:16px;padding-bottom:8px">
+      <div class="form-group" id="fg-npc-group">
+        <label class="form-label">选择角色（可多选）</label>
+        <div class="npc-sel-grid" id="fg-npc-sel"></div>
+      </div>
+      <div class="form-group" id="fg-cp-style-group" style="display:none">
+        <label class="form-label">CP风格（可选）</label>
+        <div class="npc-sel-grid" id="fg-cp-style-sel">
+          <div class="npc-sel-btn" data-style="sweet" onclick="selCpStyle('sweet')">💕 甜蜜日常</div>
+          <div class="npc-sel-btn" data-style="funny" onclick="selCpStyle('funny')">😂 爆笑误会</div>
+          <div class="npc-sel-btn" data-style="angsty" onclick="selCpStyle('angsty')">💔 虐心错过</div>
+          <div class="npc-sel-btn" data-style="swap" onclick="selCpStyle('swap')">🔀 人设对调</div>
+          <div class="npc-sel-btn" data-style="ooc" onclick="selCpStyle('ooc')">✨ 轻微OOC</div>
+        </div>
+      </div>
+      <div class="form-group" id="fg-au-group" style="display:none">
+        <label class="form-label">AU世界观（可选，留空则用原世界观）</label>
+        <div id="fg-au-options" class="npc-sel-grid"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">碎片类型</label>
+        <div class="frag-type-grid" id="fg-type-grid">
+          <div class="frag-type-btn active" data-type="diary"      onclick="selFgType('diary')">📔 角色日记</div>
+          <div class="frag-type-btn"        data-type="weibo"      onclick="selFgType('weibo')">📱 朋友圈</div>
+          <div class="frag-type-btn"        data-type="npc_forum"  onclick="selFgType('npc_forum')">📝 角色发帖</div>
+          <div class="frag-type-btn"        data-type="forum"      onclick="selFgType('forum')">💬 路人论坛</div>
+          <div class="frag-type-btn"        data-type="memory"     onclick="selFgType('memory')">✦ 记忆碎片</div>
+          <div class="frag-type-btn"        data-type="gossip"     onclick="selFgType('gossip')">🗣 NPC八卦</div>
+          <div class="frag-type-btn"        data-type="their_view" onclick="selFgType('their_view')">👁 TA眼中的我</div>
+          <div class="frag-type-btn"        data-type="cp_story"   onclick="selFgType('cp_story')">💞 CP同人文</div>
+          <div class="frag-type-btn"        data-type="cp_au"      onclick="selFgType('cp_au')">🌀 AU线</div>
+          <div class="frag-type-btn"        data-type="phone"      onclick="selFgType('phone')">📱 手机界面</div>
+          <div class="frag-type-btn"        data-type="feed"       onclick="selFgType('feed')">📖 刷帖子</div>
+          <div class="frag-type-btn"        data-type="timeline"   onclick="selFgType('timeline')">🏠 角色主页</div>
+        </div>
+      </div>
+      <div class="wizard-nav" style="padding-bottom:8px">
+        <div class="btn-secondary" onclick="closeFgModal()">取消</div>
+        <div class="btn-primary" id="fg-gen-btn" onclick="generateFragment()">生成</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- INTERVENE MODAL -->
+<div id="intervene-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeIntervene()">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">干预剧情</div>
+    <div class="modal-body" style="padding-top:12px">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="intervene-btn" onclick="interveneUndo()">↩ 撤回上一条叙述</div>
+        <div class="intervene-btn" onclick="interveneRegen()">🔄 重新生成（保留行动）</div>
+        <div class="intervene-btn" onclick="interveneDirector()">🎬 导演指令</div>
+        <div class="intervene-btn" onclick="interveneInsert()">＋ 插入事件</div>
+        <div class="intervene-btn" onclick="interveneEdit()">✎ 编辑最后叙述</div>
+        <div class="intervene-btn" onclick="intervenePlans()">📋 管理计划/目标</div>
+        <div class="intervene-btn" onclick="interveneSummary()">📜 生成/查看剧情摘要</div>
+        <div class="intervene-btn" onclick="interveneNarrate()">✍ 插入旁白/总结</div>
+      </div>
+      <div id="intervene-extra" style="margin-top:12px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CHECK OVERLAY -->
+<div id="check-overlay" class="check-overlay" style="display:none">
+  <div class="dice-wrap">
+    <div class="dice">🎲</div>
+    <div class="check-info">
+      <div class="ci-stat" id="ci-stat">—</div>
+      <div class="ci-score" id="ci-score">—</div>
+      <div class="ci-vs"    id="ci-vs">—</div>
+      <div class="ci-verdict" id="ci-verdict">—</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  CONSTANTS
+// ─────────────────────────────────────────────
+const SK = 'moyu_v1';
+const SK_PORTRAIT = 'moyu_portraits'; // 立绘单独存储
+
+// 立绘存取（不混入主存档，避免配额超限）
+function savePortrait(ownerId, imgData) {
+  try {
+    const all = JSON.parse(localStorage.getItem(SK_PORTRAIT)||'{}');
+    all[ownerId] = imgData;
+    localStorage.setItem(SK_PORTRAIT, JSON.stringify(all));
+  } catch(e) { console.warn('savePortrait failed:', e.message); }
+}
+function removePortrait(ownerId) {
+  try {
+    const all = JSON.parse(localStorage.getItem(SK_PORTRAIT)||'{}');
+    delete all[ownerId];
+    localStorage.setItem(SK_PORTRAIT, JSON.stringify(all));
+  } catch(e) {}
+}
+function loadPortraits() {
+  try { return JSON.parse(localStorage.getItem(SK_PORTRAIT)||'{}'); } catch(e) { return {}; }
+}
+
+// 上传时压缩图片到缩略图（300px最大边，JPEG 0.65）
+function compressImage(dataUrl, maxDim=300, quality=0.65) {
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      const scale=Math.min(1, maxDim/Math.max(img.width,img.height));
+      const w=Math.round(img.width*scale), h=Math.round(img.height*scale);
+      const canvas=document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror=()=>resolve(dataUrl); // 失败则用原图
+    img.src=dataUrl;
+  });
+}
+
+const MODELS = {
+  deepseek: ['deepseek-chat','deepseek-reasoner'],
+  claude:   ['claude-sonnet-4-6','claude-opus-4-6'],
+  openai:   ['gpt-4o','gpt-4.1','gpt-4o-mini'],
+  gemini:   ['gemini-2.0-flash','gemini-2.5-pro']
+};
+
+const KEY_HINTS = {
+  deepseek: '从 platform.deepseek.com 获取',
+  claude:   '从 console.anthropic.com 获取',
+  openai:   '从 platform.openai.com 获取',
+  gemini:   '从 aistudio.google.com 获取'
+};
+
+const FRAG_LABELS = {
+  diary:'📔 日记', weibo:'📱 朋友圈', forum:'💬 路人论坛',
+  npc_forum:'📝 角色发帖', memory:'✦ 记忆碎片', gossip:'🗣 八卦',
+  their_view:'👁 TA眼中的我', cp_story:'💞 CP同人文', cp_au:'🌀 AU线',
+  phone:'📱 手机界面', feed:'📖 刷帖子', timeline:'🏠 角色主页'
+};
+
+const EMOJIS = ['🎭','⚔️','🌸','🐉','🌙','🏮','🗡️','💫','🌊','🔮','🎪','🏔️'];
+
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let S = {
+  currentId: null,
+  settings: {
+    provider: 'deepseek',
+    keys: {deepseek:'',claude:'',openai:'',gemini:''},
+    models: {deepseek:'deepseek-chat',claude:'claude-sonnet-4-6',openai:'gpt-4o',gemini:'gemini-2.0-flash'},
+    baseUrls: {deepseek:'',claude:'',openai:'',gemini:''} // 留空=官方地址，填了=走这个地址
+  },
+  games: {}
+};
+
+function load() {
+  try {
+    const d = localStorage.getItem(SK);
+    if(!d){ console.log('[moyu] localStorage empty, fresh start'); return; }
+    const parsed = JSON.parse(d);
+    if(parsed.games) S.games = parsed.games;
+    if(parsed.settings) S.settings = {...S.settings, ...parsed.settings};
+    if(parsed.currentId !== undefined) S.currentId = parsed.currentId;
+    Object.values(S.games||{}).forEach(g=>{
+      (g.npcs||[]).forEach(n=>{ delete n._memoUpdating; });
+    });
+    // 把立绘从单独存储合并回来
+    const portraits = loadPortraits();
+    Object.values(S.games||{}).forEach(g=>{
+      (g.npcs||[]).forEach(n=>{ if(portraits[n.id]) n.portrait=portraits[n.id]; });
+      if(g.player && portraits['player_'+g.id]) g.player.portrait=portraits['player_'+g.id];
+    });
+    console.log('[moyu] loaded', Object.keys(S.games||{}).length, 'games');
+  } catch(e){ console.error('[moyu] load() failed:', e); }
+}
+
+function save() {
+  try {
+    // 先把立绘单独保存，主存档不含立绘（避免配额超限）
+    const portraits = loadPortraits();
+    Object.values(S.games||{}).forEach(g=>{
+      (g.npcs||[]).forEach(n=>{
+        delete n._memoUpdating;
+        if(n.portrait){ portraits[n.id]=n.portrait; }
+      });
+      if(g.player?.portrait){ portraits['player_'+g.id]=g.player.portrait; }
+    });
+    try { localStorage.setItem(SK_PORTRAIT, JSON.stringify(portraits)); } catch(e){}
+    // 保存主存档（不含立绘）
+    const clone = JSON.parse(JSON.stringify(S));
+    Object.values(clone.games||{}).forEach(g=>{
+      (g.npcs||[]).forEach(n=>{ delete n.portrait; delete n._memoUpdating; });
+      if(g.player) delete g.player.portrait;
+    });
+    localStorage.setItem(SK, JSON.stringify(clone));
+  } catch(e){
+    console.error('[moyu] save failed:', e.message);
+  }
+}
+function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2); }
+function ago(ts) {
+  const d = Date.now()-new Date(ts).getTime();
+  if(d<60000)return'刚刚';
+  if(d<3600000)return Math.floor(d/60000)+'分钟前';
+  if(d<86400000)return Math.floor(d/3600000)+'小时前';
+  return Math.floor(d/86400000)+'天前';
+}
+function cg() { return S.currentId ? S.games[S.currentId] : null; }
+
+// ─────────────────────────────────────────────
+//  NAVIGATION
+// ─────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+  if(tab==='history')  renderHistory();
+  if(tab==='character')renderCharacter();
+  if(tab==='fragment') renderFragments();
+  if(tab==='settings') renderSettings();
+  if(tab==='game')     setTimeout(scrollBottom,80);
+}
+
+// ─────────────────────────────────────────────
+//  HISTORY
+// ─────────────────────────────────────────────
+function renderHistory() {
+  const games = Object.values(S.games).sort((a,b)=>new Date(b.lastPlayedAt)-new Date(a.lastPlayedAt));
+  document.getElementById('hist-sub').textContent = games.length+' 个故事';
+  const el = document.getElementById('game-list');
+  if(!games.length){
+    el.innerHTML=`<div class="empty-state"><div class="empty-icon">✦</div>还没有故事<br>开始第一个吧</div>`;
+    return;
+  }
+  el.innerHTML=games.map(g=>`
+    <div class="game-card" style="display:flex;align-items:center;padding:0">
+      <div style="flex:1;display:flex;align-items:center;gap:14px;padding:16px;cursor:pointer;min-width:0" onclick="loadGame('${g.id}')">
+        <div class="game-emoji">${g.emoji||'🎭'}</div>
+        <div class="game-info">
+          <div class="game-name">${esc(g.name)}${g.completed?'<span style="font-size:11px;color:var(--text3)"> · 完结</span>':''}</div>
+          <div class="game-meta">${ago(g.lastPlayedAt)} · ${esc(g.chapter)}</div>
+          <div class="game-tags">${(g.npcs||[]).slice(0,3).map(n=>`<span class="game-tag">${esc(n.name)}</span>`).join('')}</div>
+        </div>
+      </div>
+      <div style="padding:16px;color:var(--text3);font-size:18px;cursor:pointer;flex-shrink:0" onclick="deleteGame('${g.id}')">🗑</div>
+    </div>
+  `).join('');
+}
+
+function loadGame(id) {
+  S.currentId = id;
+  S.games[id].lastPlayedAt = new Date().toISOString();
+  save();
+  switchTab('game');
+  renderGamePage();
+}
+
+// ─────────────────────────────────────────────
+//  GAME PAGE
+// ─────────────────────────────────────────────
+function renderGamePage() {
+  const g = cg(); if(!g) return;
+  document.getElementById('game-world-name').textContent = g.name;
+  document.getElementById('game-chapter').textContent = g.chapter;
+  const area = document.getElementById('narrative-area');
+  if(!g.narrativeHistory||g.narrativeHistory.length===0){
+    area.innerHTML=`<div class="empty-state"><div class="empty-icon">📖</div>正在生成开场……</div>`;
+    renderOptions([]);
+    startGame();
+    return;
+  }
+  renderNarrativeHistory();
+  renderOptions(g._opts||[]);
+}
+
+function renderNarrative(content){
+  // 按\n\n分段，每段独立p，保留单\n换行
+  const paras=content.split(/\n{2,}/).map(p=>p.trim()).filter(Boolean);
+  if(paras.length<=1) return`<div class="narrative-text">${esc(content).replace(/\n/g,'<br>')}</div>`;
+  return paras.map(p=>`<div class="narrative-text">${esc(p).replace(/\n/g,'<br>')}</div>`).join('');
+}
+
+function renderNarrativeHistory() {
+  const g=cg(); if(!g) return;
+  const area=document.getElementById('narrative-area');
+  area.innerHTML=(g.narrativeHistory||[]).map(b=>{
+    if(b.type==='narrative')
+      return`<div class="narrative-block">${renderNarrative(b.content)}</div>`;
+    if(b.type==='action')
+      return`<div class="narrative-block"><div class="narrative-action">「${esc(b.content)}」</div></div>`;
+    if(b.type==='check')
+      return`<div class="narrative-block"><div class="check-result ${b.success?'success':'fail'}">
+        <div class="check-label ${b.success?'success':'fail'}">${b.success?'✓ 判定成功':'✗ 判定失败'} · ${esc(b.stat)}(${b.score}) vs 难度${b.diff}</div>
+        ${renderNarrative(b.content)}
+      </div></div>`;
+    return'';
+  }).join('');
+  // 渲染完成后滚动：如果是历史回溯则到底部，游戏中有新action则滚到action处
+  if(_scrollToAction){
+    _scrollToAction=false;
+    setTimeout(scrollToActionBlock,30);
+  } else {
+    scrollBottom();
+  }
+  updatePortraitDisplay();
+}
+
+function scrollToActionBlock() {
+  // 找最后一个action块，滚动到让它在顶部附近
+  const area = document.getElementById('narrative-area');
+  const blocks = area.querySelectorAll('.narrative-block');
+  // 找最后一个action类型的块
+  let actionBlock = null;
+  for(let i=blocks.length-1;i>=0;i--){
+    if(blocks[i].querySelector('.narrative-action')){ actionBlock=blocks[i]; break; }
+  }
+  if(actionBlock){
+    const offset = actionBlock.offsetTop - 16;
+    area.scrollTo({top: offset, behavior:'smooth'});
+  } else {
+    area.scrollTo({top: area.scrollHeight, behavior:'smooth'});
+  }
+  // 更新立绘显示
+  updatePortraitDisplay();
+}
+
+function scrollBottom() {
+  const a=document.getElementById('narrative-area');
+  if(a) a.scrollTop=a.scrollHeight;
+}
+
+let _optionsCollapsed = false;
+
+function renderOptions(opts) {
+  const grid = document.getElementById('options-grid');
+  const row  = document.getElementById('options-collapse-row');
+  const btn  = document.getElementById('options-toggle-btn');
+  if(!opts||!opts.length){ grid.innerHTML=''; if(row) row.style.display='none'; return; }
+  grid.innerHTML = opts.map((o,i)=>`<button class="option-btn" onclick="chooseOpt(${i})">${esc(o)}</button>`).join('');
+  if(row){ row.style.display='flex'; }
+  if(btn){ btn.textContent = _optionsCollapsed ? '展开选项 ▲' : '收起选项 ▽'; }
+  grid.style.display = _optionsCollapsed ? 'none' : 'grid';
+}
+
+function toggleOptions(){
+  _optionsCollapsed = !_optionsCollapsed;
+  const grid = document.getElementById('options-grid');
+  const btn  = document.getElementById('options-toggle-btn');
+  if(grid) grid.style.display = _optionsCollapsed ? 'none' : 'grid';
+  if(btn)  btn.textContent    = _optionsCollapsed ? '展开选项 ▲' : '收起选项 ▽';
+}
+
+function showLoading() {
+  const area=document.getElementById('narrative-area');
+  const d=document.createElement('div');
+  d.className='narrative-block'; d.id='ld-block';
+  d.innerHTML=`<div class="loading-dots"><span></span><span></span><span></span></div>`;
+  area.appendChild(d); scrollBottom(); renderOptions([]);
+}
+function hideLoading() { const e=document.getElementById('ld-block'); if(e)e.remove(); }
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+let _lastAction = null;
+let _scrollToAction = false;
+
+async function startGame() {
+  const g=cg(); if(!g) return;
+  showLoading();
+  const userMsg='请开始故事，生成引人入胜的开场白，并提供初始选项。';
+  try {
+    const sys=buildSys(g);
+    g.messages=[];
+    const raw=await withTimeout(callAI(sys,[{role:'user',content:userMsg}], true, (g.style&&g.style.maxTokens)||900));
+    const p=parseRes(raw);
+    g.messages.push({role:'user',content:userMsg},{role:'assistant',content:raw});
+    applyChanges(g,p.sc);
+    g.narrativeHistory=[{type:'narrative',content:p.narrative}];
+    g._opts=p.options;
+    hideLoading(); save(); renderNarrativeHistory(); renderOptions(p.options);
+    document.getElementById('game-chapter').textContent=g.chapter;
+  } catch(e){ showErrorBlock(e.message, ()=>startGame()); }
+}
+
+async function chooseOpt(i) {
+  const g=cg(); if(!g||!g._opts) return;
+  await doAction(g._opts[i]);
+}
+
+async function sendFreeInput() {
+  const inp=document.getElementById('free-input');
+  const t=inp.value.trim(); if(!t) return;
+  inp.value=''; inp.style.height='auto';
+  await doAction(t);
+}
+
+async function doAction(action) {
+  const g=cg(); if(!g) return;
+  _lastAction = action;
+  _scrollToAction = true;
+  g.narrativeHistory.push({type:'action',content:action});
+  renderNarrativeHistory(); showLoading();
+
+  const lastNarr = (g.narrativeHistory||[]).filter(b=>b.type==='narrative'||b.type==='check').slice(-1)[0];
+  const ctxHint = lastNarr
+    ? `\n[续接上文，场景须有实质推进，勿重述]`
+    : '';
+
+  const msgContent = action + ctxHint;
+  g.messages.push({role:'user', content:msgContent});
+  const sys=buildSys(g);
+  try {
+    const raw=await withTimeout(callAI(sys,g.messages, true, (g.style&&g.style.maxTokens)||900));
+    const p=parseRes(raw);
+    g.messages.push({role:'assistant',content:raw});
+
+    if(p.check){
+      if(p.narrative && p.narrative!=='……'){
+        g.narrativeHistory.push({type:'narrative',content:p.narrative});
+      }
+      hideLoading();
+      const cr=await doCheck(p.check,g);
+      const followUp=`（检定：${p.check.required}得${cr.score} vs 难度${p.check.difficulty}，${cr.success?'成功':'失败'}）从判定的直接后果开始叙述，不要重复已有内容，给出3个新选项。`;
+      showLoading();
+      g.messages.push({role:'user',content:followUp});
+      const raw2=await withTimeout(callAI(sys,g.messages, true, (g.style&&g.style.maxTokens)||900));
+      const p2=parseRes(raw2);
+      g.messages.push({role:'assistant',content:raw2});
+      applyChanges(g,p2.sc);
+      hideLoading();
+      g.narrativeHistory.push({type:'check',success:cr.success,stat:p.check.required,score:cr.score,diff:p.check.difficulty,content:p2.narrative});
+      g._opts=p2.options;
+      autoUpdateCharMemos(g, p2.sc||{});
+    } else {
+      applyChanges(g,p.sc);
+      // 兜底：如果有NPC出场但好感度完全未更新，给微小正值
+      ensureAffectionUpdated(g, p.narrative, p.sc);
+      hideLoading();
+      g.narrativeHistory.push({type:'narrative',content:p.narrative});
+      g._opts=p.options;
+      autoUpdateCharMemos(g, p.sc||{});
+    }
+
+    // 截断：保留最近30条，assistant消息优先保留（它们包含叙事内容）
+    if(g.messages.length > 30){
+      g.messages = g.messages.slice(-30);
+    }
+
+    g.lastPlayedAt=new Date().toISOString();
+    if(g._directorNote) { delete g._directorNote; } // 导演指令一次性消耗
+    if(g._settingsChangedNote) { delete g._settingsChangedNote; } // 设定变更提醒一次性消耗
+    _scrollToAction=true;
+    save(); renderNarrativeHistory(); renderOptions(g._opts||[]);
+    document.getElementById('game-chapter').textContent=g.chapter;
+  } catch(e){ showErrorBlock(e.message, ()=>retryLast()); }
+}
+
+function retryLast(){
+  const g=cg(); if(!g||!_lastAction) return;
+  if(g.narrativeHistory.length && g.narrativeHistory[g.narrativeHistory.length-1].type==='error') g.narrativeHistory.pop();
+  if(g.messages.length && g.messages[g.messages.length-1].role==='user') g.messages.pop();
+  hideLoading(); renderNarrativeHistory();
+  doAction(_lastAction);
+}
+
+function showErrorBlock(msg) {
+  hideLoading();
+  const area=document.getElementById('narrative-area');
+  const d=document.createElement('div'); d.className='narrative-block'; d.id='err-block';
+  d.innerHTML=`<div class="error-block"><span class="error-msg">⚠ ${esc(msg)}</span><span class="retry-btn" onclick="retryLast()">重试</span></div>`;
+  area.appendChild(d); scrollBottom();
+  renderOptions([]);
+}
+
+// 好感度兜底：叙述里出现了NPC但AI没填好感度时，给最小正值
+function ensureAffectionUpdated(game, narrative, sc) {
+  if(!narrative||!game.npcs.length) return;
+  const updated = new Set(Object.keys(sc.npc_affection||{}));
+  game.npcs.forEach(npc=>{
+    if(!npc.name) return;
+    if(narrative.includes(npc.name)){
+      const wasUpdated = [...updated].some(k=>
+        k===npc.name ||
+        k.replace(/\s/g,'')===npc.name.replace(/\s/g,'') ||
+        k.includes(npc.name)||npc.name.includes(k)
+      );
+      if(!wasUpdated){
+        npc.affection = Math.min(100, Math.max(0, (npc.affection||0) + 2));
+      }
+    }
+  });
+}
+
+// ─────────────────────────────────────────────
+//  AUTO CHARACTER MEMO（异步，静默不阻塞，只追加不覆盖）
+// ─────────────────────────────────────────────
+async function autoUpdateCharMemos(game, sc) {
+  game._memoCounter = (game._memoCounter||0) + 1;
+  const isNewNpc = sc.new_npcs && sc.new_npcs.length > 0;
+  if(game._memoCounter % 4 !== 0 && !isNewNpc) return;
+
+  const recentText = (game.narrativeHistory||[])
+    .filter(b=>b.type==='narrative'||b.type==='check'||b.type==='action')
+    .slice(-10).map(b=>b.content||'').join('\n').slice(0,2000);
+
+  // 修2: 扫描叙述文本找出现的NPC，不再依赖npc_affection key（避免名字不匹配）
+  const newNpcNames = (sc.new_npcs||[]).map(n=>n.name);
+  const involvedNames = [...new Set([
+    ...(game.npcs||[]).filter(n=>n.name && recentText.includes(n.name)).map(n=>n.name),
+    ...newNpcNames
+  ])];
+
+  for(const name of involvedNames){
+    const npc = game.npcs.find(n=>n.name===name);
+    if(!npc || npc._memoUpdating) continue;
+    npc._memoUpdating = true;
+    try{
+      const existing = npc.characterMemo||'';
+      const prompt = `你是角色记忆助手。任务：从【最近剧情】中提取关于【${npc.name}】这个角色的新信息，写入记忆。
+
+严格规则：
+①只提取【${npc.name}】本人直接相关的内容，忽略其他角色的行为
+②只从下方【最近剧情】中提取，禁止推断或捏造
+③不重复【现有记忆】中已有的信息
+④若无新内容，必须输出"无"
+
+现有记忆：${existing||'（无）'}
+角色：${npc.name}（${npc.description||''}）
+【最近剧情】：
+${recentText}
+
+从剧情中提取【${npc.name}】的新变化（优先：约定/承诺/信物/态度转变/成人内容"【亲密】+≤10字"）
+写1句≤50字。无→输出"无"。只输出条目，不加任何说明或角色名前缀。`;
+      const raw = await callAI('直接输出追加内容，无则输出"无"。', [{role:'user',content:prompt}], false);
+      const addition = raw.replace(/```[\s\S]*?```/g,'').trim();
+      if(addition && addition !== '无' && addition.length > 2){
+        // 重新查找npc引用，防止await期间引用失效
+        const currentGame = S.games[game.id||''];
+        const currentNpc = currentGame ? currentGame.npcs.find(n=>n.name===name) : null;
+        const targetNpc = currentNpc || npc; // fallback到原引用
+        const existing2 = targetNpc.characterMemo||'';
+        const sep2 = existing2 ? '；' : '';
+        let merged = existing2 + sep2 + addition;
+        if(merged.length > 600){
+          try{
+            const compress = await callAI(
+              '将角色记忆提炼压缩。保留所有关键事件/约定/信物/情感节点，删除重复。只输出压缩后的文字，≤400字，不加任何前缀说明。',
+              [{role:'user',content:`待压缩记忆：\n${merged}`}], false);
+            const compressed=compress.replace(/^(压缩|记忆|结果|以下)[：:：\s]*/,'').replace(/```[\s\S]*?```/g,'').trim();
+            if(compressed && compressed.length > 20 && compressed.length < merged.length) merged = compressed;
+            else merged = merged.slice(0, 600);
+          }catch(e){ merged = merged.slice(0, 600); }
+        }
+        targetNpc.characterMemo = merged;
+      }
+    }catch(e){ /* 静默失败 */ }
+    npc._memoUpdating = false;
+    save();
+  }
+
+  // 玩家记忆追加（每6轮一次）
+  if(game._memoCounter % 6 !== 0) return;
+  const player = game.player;
+  const existingPlayer = player.characterMemo||'';
+  try{
+    const recentActions = (game.narrativeHistory||[])
+      .filter(b=>b.type==='action').slice(-8).map(b=>`玩家：${b.content}`).join('\n');
+    const prompt = `你是角色记忆助手。严格规则：①只从下方【最近剧情和行动】中提取真实发生的内容；②不重复【现有记忆】中已有的信息；③无新内容必须输出"无"。
+
+玩家：${player.name}，${player.background||''}
+现有记忆：${existingPlayer||'（无）'}
+【最近玩家行动】：
+${recentActions||'（无）'}
+最近剧情：${recentText.slice(0,800)}
+
+提取玩家真实发生的新变化（重要决策/约定/关系进展/获得信息）。写1句≤50字。无新变化→输出"无"。只输出条目。`;
+    const raw = await callAI('直接输出追加内容，无则输出"无"。', [{role:'user',content:prompt}], false);
+    const addition = raw.replace(/```[\s\S]*?```/g,'').trim();
+    if(addition && addition !== '无' && addition.length > 2){
+      const sep = existingPlayer ? '；' : '';
+      let merged = existingPlayer + sep + addition;
+      if(merged.length > 400){
+        try{
+          const compress = await callAI('将以下玩家记忆提炼压缩，保留关键决策/约定/关系节点，≤300字，直接输出。',
+            [{role:'user',content:merged}], false);
+          const compressed=compress.replace(/```[\s\S]*?```/g,'').trim();
+          if(compressed && compressed.length > 20) merged = compressed;
+          else merged = merged.slice(0, 400);
+        }catch(e){ merged = merged.slice(0, 400); }
+      }
+      player.characterMemo = merged;
+      save();
+    }
+  }catch(e){ /* 静默失败 */ }
+  // 每10轮自动摘要
+  if(game._memoCounter % 10 === 0) autoSummary(game, false);
+}
+
+async function autoSummary(game, isManual=false) {
+  const allNarr=(game.narrativeHistory||[]).filter(b=>b.type==='narrative'||b.type==='check');
+  const lastIdx=game._lastSummarizedAt||0;
+  const newNarr=allNarr.slice(lastIdx);
+  if(newNarr.length < (isManual?1:6)){ if(isManual) toast('叙述太少，暂无需摘要'); return; }
+  const text=newNarr.map(b=>b.content||'').join('\n\n').slice(0,3000);
+  if(isManual) toast('正在生成剧情摘要……');
+  try{
+    const raw=await callAI(
+      '你是剧情摘要助手。用100-150字简洁记录关键进展，按时间顺序，包含关键事件/角色行为/关系变化/重要信息。只输出摘要文字，不加标题或前缀。',
+      [{role:'user',content:`请摘要以下剧情：\n${text}`}], false, 600
+    );
+    const summary=raw.replace(/```[\s\S]*?```/g,'').replace(/^(摘要|剧情)[：:：\s]*/,'').trim();
+    if(!summary||summary.length<10){ if(isManual) toast('摘要生成失败，请重试'); return; }
+    game.summaries=game.summaries||[];
+    game.summaries.push({content:summary, at:new Date().toISOString(), round:game._memoCounter||0});
+    if(game.summaries.length>8) game.summaries=game.summaries.slice(-8);
+    game._lastSummarizedAt=allNarr.length;
+    save();
+    if(isManual){ toast('剧情摘要已生成'); interveneSummary(); }
+  }catch(e){ if(isManual) toast('摘要失败: '+e.message); }
+}
+
+// ─────────────────────────────────────────────
+//  CHECK / DICE
+// ─────────────────────────────────────────────
+function doCheck(check, game) {
+  return new Promise(resolve => {
+    const stat  = game.player.stats[check.required] || 50;
+    const luck  = game.player.stats['运气'] || 50;
+    const roll  = Math.round((Math.random()*30)-15);
+    const lBonus= Math.round((luck-50)*0.2);
+    const score = stat + roll + lBonus;
+    const ok    = score > check.difficulty;
+
+    const ov = document.getElementById('check-overlay');
+    document.getElementById('ci-stat').textContent = check.required+' 检定';
+    const se = document.getElementById('ci-score');
+    se.textContent = score;
+    se.className = 'ci-score '+(ok?'success':'fail');
+    document.getElementById('ci-vs').textContent = `基础${stat} ${roll>=0?'+':''}${roll} 幸运${lBonus>=0?'+':''}${lBonus}`;
+    const ve = document.getElementById('ci-verdict');
+    ve.textContent = ok ? '成　功' : '失　败';
+    ve.className = 'ci-verdict '+(ok?'success':'fail');
+    ov.style.display='flex';
+    setTimeout(()=>{ ov.style.display='none'; resolve({success:ok,score}); }, 2300);
+  });
+}
+
+// ─────────────────────────────────────────────
+//  STATE CHANGES
+// ─────────────────────────────────────────────
+function applyChanges(game, sc) {
+  if(!sc) return;
+  if(sc.player_stats) Object.entries(sc.player_stats).forEach(([k,v])=>{
+    if(game.player.stats[k]!==undefined)
+      game.player.stats[k]=Math.min(100,Math.max(0,game.player.stats[k]+Number(v)));
+  });
+  if(sc.npc_affection) Object.entries(sc.npc_affection).forEach(([name,d])=>{
+    const n=game.npcs.find(x=>x.name===name)
+      || game.npcs.find(x=>x.name.replace(/\s/g,'')===name.replace(/\s/g,''))
+      || game.npcs.find(x=>name.includes(x.name)||x.name.includes(name));
+    if(n){
+      // 兜底：如果AI返回对象而非数字，尝试提取value/change/delta字段
+      let raw_d = d;
+      if(typeof d === 'object' && d !== null){
+        raw_d = d.value ?? d.change ?? d.delta ?? d.affection ?? 0;
+      }
+      const delta = Number(raw_d);
+      if(!isNaN(delta) && delta !== 0){
+        n.affection = Math.min(100, Math.max(0, (n.affection||0) + delta));
+      }
+    }
+  });
+  if(sc.npc_known_events) Object.entries(sc.npc_known_events).forEach(([name,evts])=>{
+    const n=game.npcs.find(x=>x.name===name);
+    if(n){
+      n.knownEvents=n.knownEvents||[];
+      // 防御：evts可能是字符串或非数组
+      const evtsArr=Array.isArray(evts)?evts:(typeof evts==='string'&&evts?[evts]:[]);
+      evtsArr.forEach(e=>{ if(e&&!n.knownEvents.includes(e)) n.knownEvents.push(e); });
+      if(n.knownEvents.length>20) n.knownEvents=n.knownEvents.slice(-20);
+    }
+  });
+  if(sc.player_tags) sc.player_tags.forEach(tag=>{
+    const t=tag.slice(1).replace(/[\[\]]/g,'');
+    if(tag.startsWith('+')){ if(!game.player.tags.includes(t)) game.player.tags.push(t); }
+    else if(tag.startsWith('-')){ game.player.tags=game.player.tags.filter(x=>x!==t); }
+  });
+  // 道具
+  if(sc.player_items) sc.player_items.forEach(item=>{
+    game.player.items=game.player.items||[];
+    const name=item.slice(1).replace(/[\[\]]/g,'');
+    if(item.startsWith('+')){ if(!game.player.items.includes(name)) game.player.items.push(name); }
+    else if(item.startsWith('-')){ game.player.items=game.player.items.filter(x=>x!==name); }
+  });
+  if(sc.chapter) game.chapter=sc.chapter;
+  // 只依赖 new_npcs 自动添加角色，不用 npc_affection 兜底（兜底太激进会加路人）
+  if(sc.new_npcs&&Array.isArray(sc.new_npcs)){
+    sc.new_npcs.forEach(n=>{
+      if(n.name&&!game.npcs.find(x=>x.name===n.name)){
+        game.npcs.push({id:uid(),name:n.name,description:n.description||'',
+          gender:n.gender||'',diaryStyle:'',weiboStyle:'',
+          affection:0,difficultyFactor:3,knownEvents:[],autoAdded:true,characterMemo:''});
+      }
+    });
+  }
+}
+
+// ─────────────────────────────────────────────
+//  SYSTEM PROMPT
+// ─────────────────────────────────────────────
+const DEF_STYLE={
+  ruleAutonomy:true, ruleFormat:true, ruleProgress:true, ruleAffection:true, ruleNewNpc:true, ruleSelfCheck:true,
+  customRules:'', maxTokens:900};
+
+// 内置规则条目：每条对应buildSys里的一段规则文字，可在"游戏设置→规则"里逐条关闭
+// 关闭 = 这段文字整段从系统提示词里物理删除，不是留着但失效——避免和自定义规则打架
+const RULE_TEXTS={
+  ruleAutonomy: `【玩家自主性（最高优先级）】\n叙述只写世界对玩家行动的反应和后果，绝对禁止：描写玩家主动做了什么、玩家说了什么话、玩家内心想法或情绪。\n选项是玩家"接下来可以做"的事，不是已经发生的事。`,
+  ruleFormat: `【叙述格式（必须遵守）】\n- 每个场景/视角/动作转换必须另起段落，用空行分隔（即\\n\\n）\n- 对话独立成段，不与叙述混行\n- 至少3-4个自然段，禁止全部内容连成一段`,
+  ruleProgress: `【推进节奏】\n每轮必须有实质性的场景推进，不能停留在同一时刻反复描写。`,
+  ruleAffection: `【好感度（每轮必填）】\n本轮叙述中出现的NPC，必须在npc_affection中填写增量（正负整数），key与【NPC】列表名字完全一致：\n- 友善/帮助/好意：+5~+15；深度感情互动：+15~+25\n- 冷漠/拒绝：-5~-15；严重冲突：-15~-25\n- 普通对话：+2~+5\n每个出场NPC必填，绝对不能省略不写或填0。`,
+  ruleNewNpc: `【新角色】\n- 有名字、有一定存在感、可能再次出场的重要角色→必须填写new_npcs\n- 一次性路人（店小二、路人甲、无名士兵等）→绝对不填new_npcs\n- 判断标准：这个角色之后还会出现吗？不会→不填`,
+  ruleSelfCheck: `【自检】scene_advance先写推进了什么，再写narrative；开头不能与上轮相似。`
+};
+const RULE_LABELS={
+  ruleAutonomy:['玩家自主性','叙述只写反应/后果，不代写你的动作、发言、内心想法'],
+  ruleFormat:['分段格式','强制多段落、对话独立成段（关掉可能导致大段堆在一起，但不再"必须"这样写）'],
+  ruleProgress:['推进节奏','强制每轮要有实质剧情推进，不能停留在原地反复描写'],
+  ruleAffection:['好感度必填','强制AI每轮为出场NPC填写好感度增量（关掉后仍有兜底逻辑，只是不强制AI主动填）'],
+  ruleNewNpc:['新角色判断标准','用"是否会再出场"这条标准让AI决定要不要自动创建新角色档案'],
+  ruleSelfCheck:['自检要求','要求AI先想清楚"这轮推进了什么"再动笔写正文，并避免开头和上轮雷同']
+};
+
+function buildSys(g) {
+  const stats=Object.entries(g.player.stats||{}).map(([k,v])=>`${k}:${v}`).join('、');
+  const tags=(g.player.tags||[]).join('、')||'无';
+  // knownEvents每条限20字，最多8条
+  const npcs=(g.npcs||[]).map(n=>{
+    const events=(n.knownEvents||[]).slice(-8).map(e=>e.slice(0,20)).join('、')||'无';
+    const memo=n.characterMemo?`；记忆：${n.characterMemo.slice(0,200)}`:''; 
+    const gender=n.gender?`；性别：${n.gender}`:'';
+    const diff=n.difficultyFactor||3;
+    // 修8: 好感度+难度 → 当前对玩家的态度
+    const aff=n.affection||0;
+    const diffLabel=diff<=2?'亲和开放型（容易打动）':diff>=4?'内敛防御型（不容易打动）':'';
+    const attLabel=aff<=15?'疏远戒备':aff<=35?'中立冷淡':aff<=55?'友好':aff<=75?'亲近信任':'深度依赖/羁绊';
+    const attitude=`；当前态度：${attLabel}${diffLabel?'（性格：'+diffLabel+'）':''}`;
+    return`【${n.name}】${(n.description||'').slice(0,60)}${gender}；好感${aff}${attitude}；事件：${events}${memo}`;
+  }).join('\n');
+  const st=g.style||DEF_STYLE;
+  const directorBlock = g._directorNote
+    ? `\n【⚡导演指令（本轮必须体现，优先级高于其他规则）】\n${g._directorNote}`
+    : '';
+  // 设定刚被玩家修改时，一次性提醒——避免历史对话里已经形成的语气/长度惯性盖过新规则
+  const settingsChangedBlock = g._settingsChangedNote
+    ? `\n【⚡规则/设定刚被修改，本轮起严格按下方最新规则执行，不要沿用你之前回复里已经形成的语气、长度或格式惯性】`
+    : '';
+  const plansBlock = (g.activePlans&&g.activePlans.length)
+    ? `\n【进行中的计划/目标（必须持续追踪）】\n${g.activePlans.map((p,i)=>`${i+1}. ${p}`).join('\n')}`
+    : '';
+  const playerMemoBlock = g.player.characterMemo ? `；我的记忆：${g.player.characterMemo.slice(0,120)}` : '';
+
+  // 剧情摘要（永久记忆，不参与截断）
+  const summaryBlock = (g.summaries&&g.summaries.length)
+    ? `\n【剧情摘要（按时间顺序，已发生的关键事件）】\n${g.summaries.map(s=>s.content).join('\n')}`
+    : '';
+
+  // 动态生成好感度示例，用本局真实NPC名
+  const npcNames = (g.npcs||[]).filter(n=>n.name).map(n=>n.name);
+  const affExample = npcNames.length>=2
+    ? `{"${npcNames[0]}":8,"${npcNames[1]}":-5}`
+    : npcNames.length===1
+      ? `{"${npcNames[0]}":8}`
+      : '{"角色名":增量整数}';
+
+  // 内置规则：按开关动态拼接，关闭的规则整段不进提示词（不是留着失效）
+  const ruleKeys=['ruleAutonomy','ruleFormat','ruleProgress','ruleAffection','ruleNewNpc','ruleSelfCheck'];
+  const rulesText=ruleKeys.filter(k=>st[k]!==false).map(k=>RULE_TEXTS[k]).join('\n\n');
+  const customBlock=(st.customRules&&st.customRules.trim())
+    ? `\n\n【玩家自定义规则——最高优先级，与以上任何规则冲突时一律以本节为准】\n${st.customRules.trim()}`
+    : '';
+
+  return `你是互动小说场景生成器，负责严格按世界观和下方规则续写剧情，不额外加入任何你自己的风格倾向。
+
+【世界观】
+${g.worldSetting}
+
+【我：${g.player.name}】背景：${(g.player.background||'未设定').slice(0,100)}；属性：${stats||'无'}；标签：${tags}${playerMemoBlock}
+${summaryBlock}
+【NPC】
+${npcs||'暂无'}
+${plansBlock}
+${directorBlock}
+${settingsChangedBlock}
+
+【规则】
+${rulesText||'（无强制规则，按世界观与叙述风格自由发挥）'}${customBlock}
+
+【JSON，不输出其他内容——narrative放最后，其余字段先想清楚再写】：
+{"scene_advance":"推进了什么","options":["选项1(≤14字)","选项2(≤14字)","选项3(≤14字)"],"check":null或{"required":"属性名","difficulty":数值},"state_changes":{"player_stats":{},"npc_affection":${affExample},"npc_known_events":{},"player_tags":[],"player_items":[],"chapter":null,"new_npcs":[]},"narrative":"叙述（放最后写）"}
+npc_affection的值必须是整数（如8或-5），不能是对象，不能省略出场角色。
+player_items格式："+[道具名]"或"-[道具名]"。
+new_npcs格式：[{"name":"","description":"","gender":"男/女/其他"}]。`;
+}
+// ─────────────────────────────────────────────
+async function callAI(sys, msgs, jsonMode=true, maxTokens=1500) {
+  const {provider,keys,models,baseUrls}=S.settings;
+  const key=keys[provider];
+  if(!key) throw new Error('请先在设置中填写 API Key');
+  const model=models[provider];
+  const bu=(baseUrls||{})[provider];
+  if(provider==='deepseek'||provider==='openai') return callOAI(provider,key,model,sys,msgs,jsonMode,maxTokens,bu);
+  if(provider==='claude') return callClaude(key,model,sys,msgs,maxTokens,bu);
+  if(provider==='gemini') return callGemini(key,model,sys,msgs,jsonMode,maxTokens,bu);
+}
+
+async function withTimeout(promise, ms=35000) {
+  const ctrl = new AbortController();
+  const id = setTimeout(()=>ctrl.abort(), ms);
+  try {
+    // pass signal via a side-channel for fetch calls
+    globalThis._abortSignal = ctrl.signal;
+    const r = await promise;
+    clearTimeout(id);
+    globalThis._abortSignal = null;
+    return r;
+  } catch(e) {
+    clearTimeout(id);
+    globalThis._abortSignal = null;
+    if(e.name==='AbortError') throw new Error('请求超时（35秒），请检查网络后重试');
+    throw e;
+  }
+}
+
+async function callOAI(prov, key, model, sys, msgs, jsonMode, maxTokens=1500, baseUrl) {
+  const url=resolveOAIUrl(prov, baseUrl);
+  const body={model,messages:[{role:'system',content:sys},...msgs],temperature:.85,max_tokens:maxTokens,
+    frequency_penalty:0.4, presence_penalty:0.3};
+  if(jsonMode) body.response_format={type:'json_object'};
+  const r=await fetch(url,{
+    method:'POST', signal: globalThis._abortSignal,
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify(body)
+  });
+  if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error?.message||'HTTP '+r.status); }
+  return (await r.json()).choices[0].message.content;
+}
+// 自定义Base URL可以只填到域名/v1，也可以填完整的.../chat/completions——都兼容
+function resolveOAIUrl(prov, baseUrl){
+  if(baseUrl && baseUrl.trim()){
+    let u=baseUrl.trim().replace(/\/+$/,'');
+    if(!/\/chat\/completions$/.test(u)) u+='/chat/completions';
+    return u;
+  }
+  return prov==='deepseek'?'https://api.deepseek.com/v1/chat/completions':'https://api.openai.com/v1/chat/completions';
+}
+
+async function callClaude(key, model, sys, msgs, maxTokens=1500, baseUrl) {
+  const r=await fetch(resolveClaudeUrl(baseUrl),{
+    method:'POST', signal: globalThis._abortSignal,
+    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model,system:sys,messages:msgs,max_tokens:maxTokens,temperature:.85})
+  });
+  if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error?.message||'HTTP '+r.status); }
+  return (await r.json()).content[0].text;
+}
+function resolveClaudeUrl(baseUrl){
+  if(baseUrl && baseUrl.trim()){
+    let u=baseUrl.trim().replace(/\/+$/,'');
+    if(/\/v1\/messages$/.test(u)) return u;
+    if(/\/v1$/.test(u)) return u+'/messages';
+    return u+'/v1/messages';
+  }
+  return 'https://api.anthropic.com/v1/messages';
+}
+
+async function callGemini(key, model, sys, msgs, jsonMode, maxTokens=1500, baseUrl) {
+  const contents=msgs.map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}));
+  const genCfg={temperature:.85,maxOutputTokens:maxTokens};
+  if(jsonMode) genCfg.responseMimeType='application/json';
+  const r=await fetch(resolveGeminiUrl(baseUrl,model,key),{
+    method:'POST', signal: globalThis._abortSignal,
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents,generationConfig:genCfg})
+  });
+  if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error?.message||'HTTP '+r.status); }
+  return (await r.json()).candidates[0].content.parts[0].text;
+}
+// 第三方gemini兼容代理路径格式五花八门，尽量智能拼接：
+// 已含:generateContent的直接补key；到/models为止的直接拼model；否则按标准 .../models/{model}:generateContent 拼
+function resolveGeminiUrl(baseUrl, model, key){
+  let base=(baseUrl&&baseUrl.trim())?baseUrl.trim().replace(/\/+$/,''):'https://generativelanguage.googleapis.com/v1beta';
+  if(/:generateContent/.test(base)) return base+(base.includes('?')?'&':'?')+'key='+key;
+  if(/\/models$/.test(base)) return `${base}/${model}:generateContent?key=${key}`;
+  return `${base}/models/${model}:generateContent?key=${key}`;
+}
+
+// 括号计数法：从start位置的开括号开始，找到与之配对的闭括号，正确跳过字符串内的括号/转义
+function scanBalanced(raw, start){
+  const openChar=raw[start];
+  const closeChar=openChar==='{'?'}':openChar==='['?']':null;
+  if(!closeChar) return null;
+  let depth=0, inStr=false, esc=false;
+  for(let j=start;j<raw.length;j++){
+    const c=raw[j];
+    if(inStr){
+      if(esc) esc=false;
+      else if(c==='\\') esc=true;
+      else if(c==='"') inStr=false;
+      continue;
+    }
+    if(c==='"'){ inStr=true; continue; }
+    if(c===openChar) depth++;
+    else if(c===closeChar){ depth--; if(depth===0) return raw.slice(start,j+1); }
+  }
+  return null;
+}
+
+// 定位"字段名":后的值并用括号计数法提取，比贪婪正则更抗AI输出中夹杂的多余文字
+function extractField(raw, fieldName){
+  const key='"'+fieldName+'"';
+  const idx=raw.indexOf(key);
+  if(idx===-1) return null;
+  let i=raw.indexOf(':',idx+key.length);
+  if(i===-1) return null;
+  i++;
+  while(i<raw.length && /\s/.test(raw[i])) i++;
+  if(raw[i]!=='{' && raw[i]!=='[') return null;
+  return scanBalanced(raw, i);
+}
+
+function extractJson(raw){
+  // 先尝试整体解析
+  const clean=raw.replace(/^```json\s*/m,'').replace(/^```\s*/m,'').replace(/```\s*$/m,'').trim();
+  try{ return JSON.parse(clean); }catch(e){}
+  // 括号计数法：从第一个{开始找配对的}，能正确处理AI在JSON前后夹带的说明文字
+  const start=raw.indexOf('{');
+  if(start!==-1){
+    const candidate=scanBalanced(raw, start);
+    if(candidate){ try{ return JSON.parse(candidate); }catch(e){} }
+  }
+  // 兜底：贪婪正则（保留旧逻辑作最后防线）
+  const objMatch=raw.match(/\{[\s\S]*\}/);
+  if(objMatch){ try{ return JSON.parse(objMatch[0]); }catch(e){} }
+  const arrMatch=raw.match(/\[[\s\S]*\]/);
+  if(arrMatch){ try{ return JSON.parse(arrMatch[0]); }catch(e){} }
+  throw new Error('无法从响应中提取JSON');
+}
+
+function parseRes(raw) {
+  try {
+    const p = extractJson(raw);
+    return {
+      narrative: (typeof p.narrative==='string' ? p.narrative : '') || '……',
+      options:   Array.isArray(p.options) ? p.options : [],
+      check:     p.check||null,
+      sc:        p.state_changes||{}
+    };
+  } catch(e) {
+    // 整体JSON解析失败：narrative退化为正则提取，但state_changes（含new_npcs/好感度）
+    // 单独用括号计数法再抢救一次，避免"正文救回来了、新角色和好感度却整体丢失"
+    let narrative=null, options=['继续……'], truncated=false;
+    const m = raw.match(/"narrative"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+    if(m) {
+      try { narrative = JSON.parse('"'+m[1]+'"'); } catch(e2){}
+    }
+    if(narrative===null){
+      // narrative在JSON最后一个字段，若被maxTokens硬截断，值会没有闭合引号——
+      // 单独按"截断的字符串"处理，避免把裸露的JSON碎片当正文糊给用户看
+      const m2 = raw.match(/"narrative"\s*:\s*"((?:[^"\\]|\\.)*)$/);
+      if(m2){
+        try { narrative = JSON.parse('"'+m2[1]+'"'); } catch(e3){ narrative = m2[1].replace(/\\n/g,'\n').replace(/\\"/g,'"'); }
+        truncated = true;
+      }
+    }
+    if(narrative===null){
+      const text = raw.replace(/\{[\s\S]*\}/g,'').trim().slice(0,500);
+      narrative = text||'……';
+    }
+    if(truncated) narrative = (narrative||'').trim()+'……（内容过长被硬性长度上限截断，可在设置里调大"硬性长度上限"）';
+    const om = raw.match(/"options"\s*:\s*(\[[\s\S]*?\])/);
+    if(om){ try{ const o=JSON.parse(om[1]); if(Array.isArray(o)&&o.length) options=o; }catch(e4){} }
+    let sc={};
+    const scRaw = extractField(raw,'state_changes');
+    if(scRaw){ try{ sc=JSON.parse(scRaw); }catch(e5){} }
+    return {narrative, options, check:null, sc};
+  }
+}
+
+// ─────────────────────────────────────────────
+//  CHARACTER PAGE
+// ─────────────────────────────────────────────
+let _memoExpanded  = {};
+let _memoEditing   = {};
+let _descExpanded  = {};
+let _playerMemoExp = false;
+let _playerMemoEdt = false;
+let _playerEditMode = false;
+
+function renderCharacter() {
+  const g=cg();
+  const pp=document.getElementById('player-panel');
+  const nl=document.getElementById('npc-list');
+  if(!pp||!nl) return;
+  if(!g){
+    pp.innerHTML=`<div class="empty-state">尚未选择游戏</div>`;
+    nl.innerHTML=''; return;
+  }
+  if(!g.player) g.player={name:'',background:'',stats:{},tags:[],items:[]};
+  if(!g.player.tags) g.player.tags=[];
+  if(!g.player.items) g.player.items=[];
+  if(!g.player.stats) g.player.stats={};
+  try {
+    _doRenderCharacter(g, pp, nl);
+  } catch(e) {
+    console.error('[renderCharacter]', e);
+    pp.innerHTML=`<div class="empty-state" style="font-size:11px;color:#e07070;padding:12px">渲染错误:<br>${esc(e.message)}</div>`;
+    nl.innerHTML='';
+  }
+}
+
+function _doRenderCharacter(g, pp, nl) {
+
+  // 我的面板
+  const statsHtml=Object.entries(g.player.stats||{}).map(([n,v])=>`
+    <div class="stat-item">
+      <div class="s-name">${esc(n)}</div>
+      <div class="s-bar-row">
+        <div class="s-bar"><div class="s-fill" style="width:${v}%"></div></div>
+        <div class="s-val">${v}</div>
+      </div>
+    </div>`).join('');
+  const tagsHtml=(g.player.tags||[]).map(t=>`<span class="p-tag">${esc(t)}</span>`).join('');
+  const itemsHtml=(g.player.items||[]).map(t=>`<span class="p-tag" style="background:rgba(88,168,120,.1);border-color:rgba(88,168,120,.3);color:var(--green)">🎒 ${esc(t)}</span>`).join('');
+  const playerMemo = g.player.characterMemo||'';
+  let playerMemoHtml='';
+  if(_playerMemoExp){
+    if(_playerMemoEdt){
+      playerMemoHtml=`<div class="memo-body"><textarea class="memo-edit-area" id="player-memo-edit">${esc(playerMemo)}</textarea>
+        <div class="memo-actions"><button class="memo-btn" onclick="playerMemoEditCancel()">取消</button><button class="memo-btn primary" onclick="playerMemoEditSave()">保存</button></div></div>`;
+    } else {
+      playerMemoHtml=`<div class="memo-body"><div class="memo-text">${playerMemo?esc(playerMemo):'（尚无记录，游玩后自动追加，或点刷新手动生成）'}</div>
+        <div class="memo-actions">
+          <button class="memo-btn" onclick="playerMemoEditStart()">编辑</button>
+          <button class="memo-btn" onclick="playerMemoRefresh()">刷新</button>
+        </div></div>`;
+    }
+  }
+  let playerEditHtml='';
+  const _pe=_playerEditMode||false;
+  if(_pe){
+    const statsEditHtml=Object.entries(g.player.stats||{}).map(([n,v])=>`
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+        <span style="font-size:12px;color:var(--text2);font-family:'Noto Sans SC',sans-serif;width:60px;flex-shrink:0">${esc(n)}</span>
+        <input type="number" min="0" max="100" value="${v}" class="form-input" style="flex:1;padding:6px 10px" oninput="playerStatEdit('${n}',+this.value)">
+      </div>`).join('');
+    playerEditHtml=`<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
+      <div class="form-label" style="margin-bottom:6px">姓名</div>
+      <input class="form-input" value="${esc(g.player.name)}" oninput="playerNameEdit(this.value)" style="margin-bottom:10px">
+      <div class="form-label" style="margin-bottom:6px">背景</div>
+      <input class="form-input" value="${esc(g.player.background||'')}" oninput="playerBgEdit(this.value)" style="margin-bottom:10px">
+      <div class="form-label" style="margin-bottom:8px">属性</div>
+      ${statsEditHtml}
+      <div class="form-label" style="margin-top:10px;margin-bottom:6px">状态标签（逗号分隔）</div>
+      <input class="form-input" value="${esc((g.player.tags||[]).join('、'))}" oninput="playerTagsEdit(this.value)" style="margin-bottom:10px">
+      <div class="form-label" style="margin-bottom:6px">道具（逗号分隔）</div>
+      <input class="form-input" value="${esc((g.player.items||[]).join('、'))}" oninput="playerItemsEdit(this.value)">
+      <div class="wizard-nav" style="margin-top:10px"><div class="btn-primary" onclick="playerEditDone()">完成</div></div>
+    </div>`;
+  }
+  const playerPortraitHtml = g.player.portrait
+    ? `<div class="npc-portrait-upload" onclick="playerPortraitUpload()" style="width:64px;height:64px;flex-shrink:0"><img src="${g.player.portrait}" alt="立绘" style="width:100%;height:100%;object-fit:cover;border-radius:10px"></div>`
+    : `<div class="npc-portrait-upload" onclick="playerPortraitUpload()" style="width:64px;height:64px;flex-shrink:0"><span class="upload-hint" style="font-size:22px">🖼</span></div>`;
+
+  pp.innerHTML=`<div class="player-card">
+    <div style="display:flex;align-items:flex-start;gap:12px">
+      ${playerPortraitHtml}
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+          <div><span class="player-name">${esc(g.player.name)}</span> <span class="player-bg-text">${esc(g.player.background||'')}</span></div>
+          <button style="background:transparent;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text3);font-family:'Noto Sans SC',sans-serif;cursor:pointer;flex-shrink:0" onclick="togglePlayerEdit()">${_pe?'取消':'编辑'}</button>
+        </div>
+        ${_pe ? playerEditHtml : `
+        <div class="stats-grid">${statsHtml}</div>
+        ${tagsHtml?`<div class="player-tags" style="margin-bottom:8px">${tagsHtml}</div>`:''}
+        ${itemsHtml?`<div class="player-tags" style="margin-bottom:4px">${itemsHtml}</div>`:''}
+        `}
+      </div>
+    </div>
+    <div class="memo-row" style="margin-top:10px">
+      <div class="memo-hdr" onclick="playerMemoToggle()">
+        <div class="memo-hdr-left"><span class="memo-label">我的记忆备注</span>${playerMemo?'<span class="memo-badge">已记录</span>':''}</div>
+        <span class="memo-toggle">${_playerMemoExp?'收起':'展开'}</span>
+      </div>
+      ${!_playerMemoExp&&playerMemo?`<div class="memo-preview">${esc(playerMemo)}</div>`:''}
+      ${playerMemoHtml}
+    </div>
+  </div>`;
+
+  if(!g.npcs||!g.npcs.length){ nl.innerHTML=`<div class="empty-state" style="padding:20px 0">暂无角色</div>`; return; }
+  nl.innerHTML=g.npcs.map(n=>renderNpcCard(n)).join('');
+}
+
+function playerPortraitUpload(){
+  const input=document.createElement('input');
+  input.type='file'; input.accept='image/*';
+  input.onchange=e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=async ev=>{
+      const compressed=await compressImage(ev.target.result,300,0.65);
+      const g=cg(); if(!g) return;
+      g.player.portrait=compressed;
+      savePortrait('player_'+g.id,compressed);
+      save(); renderCharacter();
+      toast('玩家立绘已上传（已压缩）');
+    };
+    r.readAsDataURL(f);
+  };
+  input.click();
+}
+function togglePlayerEdit(){ _playerEditMode=!_playerEditMode; renderCharacter(); }
+function playerEditDone(){ _playerEditMode=false; save(); renderCharacter(); }
+function playerNameEdit(v){ const g=cg(); if(!g||!v.trim()) return; g.player.name=v.trim(); }
+function playerBgEdit(v){ const g=cg(); if(!g) return; g.player.background=v; }
+function playerStatEdit(n,v){ const g=cg(); if(!g) return; g.player.stats[n]=Math.min(100,Math.max(0,v)); }
+function playerTagsEdit(v){ const g=cg(); if(!g) return; g.player.tags=v.split(/[,，、]/).map(t=>t.trim()).filter(Boolean); }
+function playerItemsEdit(v){ const g=cg(); if(!g) return; g.player.items=v.split(/[,，、]/).map(t=>t.trim()).filter(Boolean); }
+
+function playerMemoToggle(){ _playerMemoExp=!_playerMemoExp; if(!_playerMemoExp)_playerMemoEdt=false; renderCharacter(); }
+function playerMemoEditStart(){ _playerMemoEdt=true; renderCharacter(); setTimeout(()=>{ const t=document.getElementById('player-memo-edit'); if(t){t.focus();t.selectionStart=t.value.length;} },50); }
+function playerMemoEditCancel(){ _playerMemoEdt=false; renderCharacter(); }
+function playerMemoEditSave(){ const g=cg(); if(!g) return; const t=document.getElementById('player-memo-edit'); if(t){ g.player.characterMemo=t.value.trim(); save(); } _playerMemoEdt=false; renderCharacter(); }
+
+async function playerMemoRefresh(){
+  const g=cg(); if(!g) return;
+  const player=g.player;
+  const existing=player.characterMemo||'';
+  const recentActions=(g.narrativeHistory||[]).filter(b=>b.type==='action').slice(-8).map(b=>`玩家：${b.content}`).join('\n');
+  const recentNarr=(g.narrativeHistory||[]).filter(b=>b.type==='narrative'||b.type==='check').slice(-6).map(b=>b.content||'').join('\n').slice(0,1000);
+  if(!recentActions){ toast('暂无行动记录'); return; }
+  toast('生成中……');
+  try{
+    const prompt=`你是角色记忆助手。
+玩家角色：${player.name}，${player.background||''}
+现有记忆：${existing||'（无）'}
+最近玩家行动：\n${recentActions}
+最近剧情：${recentNarr}
+
+任务：从以上行动中提取体现玩家性格/决策风格/行为倾向的1句话追加条目，≤40字。
+如果没有值得记录的新内容，输出"无"。只输出追加条目本身。`;
+    const raw=await callAI('直接输出追加内容，无则输出"无"。',[{role:'user',content:prompt}],false);
+    const addition=raw.replace(/```[\s\S]*?```/g,'').trim();
+    if(addition && addition!=='无' && addition.length>2){
+      const sep=existing?'；':'';
+      player.characterMemo=(existing+sep+addition).slice(-300);
+      save(); toast('已追加新记录');
+    } else { toast('没有新信息可追加'); }
+  }catch(e){ toast('失败: '+e.message); }
+  renderCharacter();
+}
+
+function renderNpcCard(n){
+  if(!n) return '';
+  // 旧存档兼容
+  if(!n.knownEvents) n.knownEvents=[];
+  if(n.affection===undefined) n.affection=0;
+  if(!n.difficultyFactor) n.difficultyFactor=3;
+  const isExpanded = _memoExpanded[n.id];
+  const isEditing  = _memoEditing[n.id];
+  const isDescExp  = _descExpanded[n.id];
+  const hasMemo    = !!(n.characterMemo);
+  const isUpdating = !!(n._memoUpdating);
+  const hasLongDesc= (n.description||'').length > 30;
+
+  const eventTagsHtml=(n.knownEvents||[]).length
+    ?`<div class="event-tags" style="margin-bottom:6px">${n.knownEvents.slice(-5).map(e=>`<span class="event-tag">${esc(e)}</span>`).join('')}</div>`:'' ;
+
+  // 简介展开/折叠
+  const descHtml = hasLongDesc
+    ? (isDescExp
+        ? `<div style="font-size:12px;color:var(--text2);font-family:'Noto Sans SC',sans-serif;line-height:1.7;margin-bottom:8px;cursor:pointer" onclick="descToggle('${n.id}')">${esc(n.description)} <span style="color:var(--text3)">收起</span></div>`
+        : `<div style="font-size:12px;color:var(--text2);font-family:'Noto Sans SC',sans-serif;line-height:1.7;margin-bottom:8px;cursor:pointer;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical" onclick="descToggle('${n.id}')">${esc(n.description)} <span style="color:var(--gold);font-size:11px">展开</span></div>`)
+    : (n.description ? `<div style="font-size:12px;color:var(--text2);font-family:'Noto Sans SC',sans-serif;line-height:1.7;margin-bottom:8px">${esc(n.description)}</div>` : '');
+
+  let memoBodyHtml='';
+  if(isExpanded){
+    memoBodyHtml=isEditing
+      ?`<div class="memo-body"><textarea class="memo-edit-area" id="memo-edit-${n.id}">${esc(n.characterMemo||'')}</textarea>
+          <div class="memo-actions"><button class="memo-btn" onclick="memoEditCancel('${n.id}')">取消</button><button class="memo-btn primary" onclick="memoEditSave('${n.id}')">保存</button></div></div>`
+      :`<div class="memo-body"><div class="memo-text">${hasMemo?esc(n.characterMemo):'（尚未生成，继续游玩后自动更新）'}</div>
+          <div class="memo-actions">${hasMemo?`<button class="memo-btn" onclick="memoEditStart('${n.id}')">编辑</button>`:''}<button class="memo-btn" onclick="memoRefresh('${n.id}')">刷新</button></div></div>`;
+  }
+
+  const badgeHtml=isUpdating?`<span class="memo-badge updating">更新中…</span>`:hasMemo?`<span class="memo-badge">已记录</span>`:'';
+  const previewHtml=!isExpanded&&hasMemo?`<div class="memo-preview">${esc(n.characterMemo)}</div>`:'';
+
+  const portraitHtml = n.portrait
+    ? `<div class="npc-portrait-upload" onclick="npcPortraitUpload('${n.id}')"><img src="${n.portrait}" alt="立绘"></div>`
+    : `<div class="npc-portrait-upload" onclick="npcPortraitUpload('${n.id}')"><span class="upload-hint">🖼</span></div>`;
+
+  return `<div class="npc-card" id="npc-card-${n.id}">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+        ${portraitHtml}
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <span class="npc-name">${esc(n.name)}</span>${n.autoAdded?'<span style="font-size:10px;color:var(--text3)">剧情</span>':''}
+          </div>
+          ${descHtml}
+        </div>
+      </div>
+      <button style="background:transparent;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" onclick="npcDelFromChar('${n.id}')">×</button>
+    </div>
+    <div class="affection-row">
+      <span class="aff-label">好感度${n.difficultyFactor&&n.difficultyFactor!==3?` ★${'★'.repeat(n.difficultyFactor-1).slice(0,4)}难`:''}</span>
+      <div class="aff-bar"><div class="aff-fill" style="width:${n.affection||0}%"></div></div>
+      <span class="aff-num">${n.affection||0}</span>
+    </div>
+    ${eventTagsHtml}
+    <div class="memo-row">
+      <div class="memo-hdr" onclick="memoToggle('${n.id}')">
+        <div class="memo-hdr-left"><span class="memo-label">人设记忆</span>${badgeHtml}</div>
+        <span class="memo-toggle">${isExpanded?'收起':'展开'}</span>
+      </div>
+      ${previewHtml}
+      ${memoBodyHtml}
+    </div>
+  </div>`;
+}
+
+function npcPortraitUpload(npcId){
+  const input=document.createElement('input');
+  input.type='file'; input.accept='image/*';
+  input.onchange=e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=async ev=>{
+      const compressed=await compressImage(ev.target.result,300,0.65);
+      const g=cg(); if(!g) return;
+      const n=g.npcs.find(x=>x.id===npcId); if(!n) return;
+      n.portrait=compressed;
+      savePortrait(npcId,compressed);
+      save(); renderCharacter();
+      toast(`${n.name}的立绘已上传（已压缩）`);
+    };
+    r.readAsDataURL(f);
+  };
+  input.click();
+}
+
+function npcPortraitRemove(npcId){
+  const g=cg(); if(!g) return;
+  const n=g.npcs.find(x=>x.id===npcId); if(!n) return;
+  delete n.portrait; save(); renderCharacter();
+}
+
+// 根据最新叙述内容，找出第一个出场的有立绘NPC并显示
+let _portraitHidden = false;
+
+function togglePortrait(){
+  _portraitHidden = !_portraitHidden;
+  const stage=document.getElementById('portrait-stage');
+  const img=document.getElementById('portrait-img');
+  if(_portraitHidden){
+    if(img) img.classList.remove('visible');
+    setTimeout(()=>{ if(stage) stage.style.display='none'; },400);
+  } else {
+    _portraitHidden=false;
+    updatePortraitDisplay();
+  }
+}
+
+function updatePortraitDisplay(){
+  if(_portraitHidden) return;
+  const g=cg();
+  const stage=document.getElementById('portrait-stage');
+  const img=document.getElementById('portrait-img');
+  const tag=document.getElementById('portrait-name-tag');
+  if(!img||!g) return;
+
+  const latest=(g.narrativeHistory||[]).filter(b=>b.type==='narrative'||b.type==='check').slice(-1)[0];
+  if(!latest||!latest.content){
+    img.classList.remove('visible');
+    if(stage) stage.style.display='none';
+    return;
+  }
+
+  const txt=latest.content;
+  const matched=(g.npcs||[]).find(n=>n.portrait && n.name && txt.includes(n.name));
+  if(matched){
+    if(stage) stage.style.display='block';
+    if(img.dataset.portraitSrc!==matched.portrait){
+      img.classList.remove('visible');
+      setTimeout(()=>{
+        img.src=matched.portrait;
+        img.dataset.portraitSrc=matched.portrait;
+        img.classList.add('visible');
+      },150);
+    } else {
+      img.classList.add('visible');
+    }
+    if(tag) tag.textContent=matched.name+' 点击隐藏';
+  } else {
+    img.classList.remove('visible');
+    if(stage) stage.style.display='none';
+  }
+}
+
+function descToggle(npcId){ _descExpanded[npcId]=!_descExpanded[npcId]; renderCharacter(); }
+function npcDelFromChar(npcId){
+  const g=cg(); if(!g) return;
+  const npc=g.npcs.find(n=>n.id===npcId); if(!npc) return;
+  if(!confirm(`确认删除角色「${npc.name}」？`)) return;
+  g.npcs=g.npcs.filter(n=>n.id!==npcId); save(); renderCharacter();
+}
+
+function memoToggle(npcId){ _memoExpanded[npcId]=!_memoExpanded[npcId]; if(!_memoExpanded[npcId]) _memoEditing[npcId]=false; renderCharacter(); }
+function memoEditStart(npcId){ _memoEditing[npcId]=true; renderCharacter(); setTimeout(()=>{ const t=document.getElementById('memo-edit-'+npcId); if(t){t.focus();t.selectionStart=t.value.length;} },50); }
+function memoEditCancel(npcId){ _memoEditing[npcId]=false; renderCharacter(); }
+function memoEditSave(npcId){
+  const g=cg(); if(!g) return;
+  const npc=g.npcs.find(n=>n.id===npcId); if(!npc) return;
+  const t=document.getElementById('memo-edit-'+npcId);
+  if(t){ npc.characterMemo=t.value.trim().slice(0,200); save(); }
+  _memoEditing[npcId]=false; renderCharacter();
+}
+async function memoRefresh(npcId){
+  const g=cg(); if(!g) return;
+  const npc=g.npcs.find(n=>n.id===npcId); if(!npc) return;
+  npc._memoUpdating=true; save(); renderCharacter();
+  const recentText=(g.narrativeHistory||[])
+    .filter(b=>b.type==='narrative'||b.type==='check'||b.type==='action')
+    .slice(-10).map(b=>b.content||'').join('\n').slice(0,2000);
+  try{
+    const existing=npc.characterMemo||'';
+    const prompt=`你是角色记忆助手。
+现有记忆：${existing||'（无）'}
+角色：${npc.name}，${npc.description||''}
+最近剧情：${recentText}
+
+任务：从剧情中提取关于【${npc.name}】尚未被记录的新信息（性格表现、关键互动、态度变化），写1-2句追加条目，≤60字。
+如果没有新信息，输出"无"。只输出追加条目本身。`;
+    const raw=await callAI('直接输出追加内容，无则输出"无"。',[{role:'user',content:prompt}],false);
+    const addition=raw.replace(/```[\s\S]*?```/g,'').trim();
+    if(addition && addition!=='无' && addition.length>2){
+      const sep=existing?'；':'';
+      npc.characterMemo=(existing+sep+addition).slice(-400);
+      toast(npc.name+' 记忆已追加');
+    } else {
+      toast('没有新信息可追加');
+    }
+  }catch(e){ toast('更新失败: '+e.message); }
+  npc._memoUpdating=false; save(); renderCharacter();
+}
+
+// ─────────────────────────────────────────────
+//  FRAGMENT PAGE
+// ─────────────────────────────────────────────
+let fragF='all';
+
+function renderFragments() {
+  const g=cg();
+  const fl=document.getElementById('fragment-list');
+  const fb=document.getElementById('frag-filters');
+  if(!g){ fl.innerHTML=`<div class="empty-state">尚未选择游戏</div>`; fb.innerHTML=''; return; }
+  const frags=g.fragments||[];
+  const allTypes=['all',...new Set(frags.map(f=>f.type))];
+  const typeLabels={all:'全部',...FRAG_LABELS};
+  fb.innerHTML=allTypes.map(t=>`<div class="frag-filter ${fragF===t?'active':''}" onclick="setFragF('${t}')">${typeLabels[t]||t}</div>`).join('');
+  const filtered=fragF==='all'?frags:frags.filter(f=>f.type===fragF);
+  if(!filtered.length){
+    fl.innerHTML=`<div class="empty-state"><div class="empty-icon">🎴</div>还没有碎片<br>点击「生成新碎片」开始</div>`; return;
+  }
+  fl.innerHTML=[...filtered].reverse().map(f=>{
+    const contentHtml = f.isHtml
+      ? safeFragHtml(f.content)
+      : esc(f.content).replace(/\n/g,'<br>');
+    return`<div class="fragment-card">
+      <div class="frag-header">
+        <div class="frag-meta"><span class="frag-npc">${esc(f.npcName||'')}</span><span class="frag-type-badge">${FRAG_LABELS[f.type]||f.type}</span></div>
+        <span class="frag-chapter-ref">${esc(f.chapterRef||'')}</span>
+      </div>
+      <div class="frag-content" style="white-space:normal">${contentHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+function safeFragHtml(html) {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<link[^>]*>/gi, '')
+    .replace(/<html[^>]*>|<\/html>|<body[^>]*>|<\/body>|<head[\s\S]*?<\/head>/gi, '');
+}
+
+function phoneTabById(el, targetId, prefix){
+  // 找到包含该tab的phone-frame，切换content显示
+  const frame=el.closest('.phone-frame');
+  if(!frame) return;
+  frame.querySelectorAll('.phone-tab').forEach(t=>t.classList.remove('active'));
+  frame.querySelectorAll('.phone-content').forEach(c=>c.style.display='none');
+  el.classList.add('active');
+  const t=document.getElementById(targetId);
+  if(t) t.style.display='block';
+}
+// 保留旧版兼容
+function phoneTab(el, targetId){ phoneTabById(el, targetId, ''); }
+
+function setFragF(f){ fragF=f; renderFragments(); }
+
+// ─────────────────────────────────────────────
+//  FRAGMENT GENERATION MODAL
+// ─────────────────────────────────────────────
+let fgState = {npcIds:[], type:'diary', auType:'', cpStyle:''};
+
+function openFragGen() {
+  const g=cg();
+  if(!g){ toast('请先选择游戏'); return; }
+  if(!g.narrativeHistory||!g.narrativeHistory.length){ toast('先进行一些游戏再生成碎片'); return; }
+  fgState={npcIds:[], type:'diary', auType:'', cpStyle:''};
+  const ns=document.getElementById('fg-npc-sel');
+  ns.innerHTML=g.npcs.map(n=>`<div class="npc-sel-btn" data-id="${n.id}" onclick="selFgNpc('${n.id}')">${esc(n.name)}</div>`).join('');
+  document.querySelectorAll('.frag-type-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('[data-type="diary"]').classList.add('active');
+  document.getElementById('fg-au-group').style.display='none';
+  document.getElementById('fg-cp-style-group').style.display='none';
+  document.getElementById('frag-modal').style.display='flex';
+}
+function closeFgModal(){ document.getElementById('frag-modal').style.display='none'; }
+function fgBgClick(e){ if(e.target===document.getElementById('frag-modal')) closeFgModal(); }
+
+function selFgNpc(id){
+  const idx=fgState.npcIds.indexOf(id);
+  if(idx>=0) fgState.npcIds.splice(idx,1); else fgState.npcIds.push(id);
+  document.querySelectorAll('#fg-npc-sel .npc-sel-btn').forEach(b=>b.classList.toggle('active',fgState.npcIds.includes(b.dataset.id)));
+}
+
+function selCpStyle(s){
+  fgState.cpStyle = fgState.cpStyle===s ? '' : s; // 可取消
+  document.querySelectorAll('#fg-cp-style-sel .npc-sel-btn').forEach(b=>b.classList.toggle('active',b.dataset.style===fgState.cpStyle));
+}
+
+function selFgType(t){
+  fgState.type=t; fgState.auType=''; fgState.cpStyle='';
+  document.querySelectorAll('.frag-type-btn').forEach(b=>b.classList.toggle('active',b.dataset.type===t));
+  const noNpc=['forum','gossip'].includes(t);
+  const isCP=['cp_story','cp_au'].includes(t);
+  document.getElementById('fg-npc-group').style.display = noNpc?'none':'block';
+  document.querySelector('#fg-npc-group .form-label').textContent =
+    isCP ? '选择角色（可多选，将与玩家组CP）' :
+    t==='feed' ? '选择出现在评论区的角色（可多选，可不选）' :
+    ['diary','weibo','their_view','phone','timeline','npc_forum'].includes(t) ? '选择角色' : '选择角色（可多选）';
+  // CP风格面板
+  document.getElementById('fg-cp-style-group').style.display = isCP?'block':'none';
+  if(isCP) document.querySelectorAll('#fg-cp-style-sel .npc-sel-btn').forEach(b=>b.classList.remove('active'));
+  // AU面板（CP类型都可用）
+  if(isCP){
+    document.getElementById('fg-au-group').style.display='block';
+    document.getElementById('fg-au-group').querySelector('.form-label').textContent='AU世界观（可选，留空则用原世界观）';
+    loadAuSuggestions();
+  } else {
+    document.getElementById('fg-au-group').style.display='none';
+  }
+}
+
+async function loadAuSuggestions(){
+  const g=cg(); if(!g) return;
+  const el=document.getElementById('fg-au-options');
+  el.innerHTML='<div class="hint-text">AI推荐中……</div>';
+  try{
+    const raw=await callAI('你是互动小说助手，根据世界观推荐3个有趣的AU线方向，严格输出JSON数组，每项{"type":"AU名称","desc":"一句话描述"}，不超过3项，不输出其他内容。',
+      [{role:'user',content:`世界观：${(g.worldSetting||'').slice(0,200)}\n角色：${(g.npcs||[]).map(n=>n.name).join('、')}`}],true);
+    const arr=JSON.parse(raw.replace(/```json\n?|```\n?/g,'').trim());
+    el.innerHTML=arr.map(a=>`<div class="npc-sel-btn ${fgState.auType===a.type?'active':''}" onclick="selAuType('${a.type.replace(/'/g,'\\\'')}')" title="${esc(a.desc)}">${esc(a.type)}</div>`).join('');
+  }catch(e){ el.innerHTML='<div class="hint-text" style="color:var(--red)">推荐失败，可手动输入</div><input class="form-input" placeholder="输入AU类型" oninput="fgState.auType=this.value" style="margin-top:6px">'; }
+}
+function selAuType(t){ fgState.auType=t; document.querySelectorAll('#fg-au-options .npc-sel-btn').forEach(b=>b.classList.toggle('active',b.textContent===t)); }
+
+async function generateFragment() {
+  const g=cg(); if(!g) return;
+  const type=fgState.type;
+
+  // 确定焦点NPC（单选类型用第一个，多选类型用全部）
+  const selectedNpcs=fgState.npcIds.map(id=>g.npcs.find(n=>n.id===id)).filter(Boolean);
+  const primaryNpc=selectedNpcs[0]||null;
+
+  // 验证
+  const needSingle=['diary','their_view','timeline','npc_forum'].includes(type);
+  const needAny=['weibo','phone','memory','cp_story','cp_au'].includes(type);
+  if(needSingle&&!primaryNpc){ toast('请选择一个角色'); return; }
+  if(needAny&&!primaryNpc){ toast('请至少选择一个角色'); return; }
+  if(type==='cp_au'&&!fgState.auType){ toast('请选择AU类型'); return; }
+
+  closeFgModal(); toast('生成中……');
+
+  const recentNarr=(g.narrativeHistory||[]).filter(b=>b.type==='narrative'||b.type==='check').slice(-20).map(b=>b.content||'').join('\n\n').slice(0,2500);
+  // 长期剧情摘要（跟正文推进时用的同一份摘要），避免衍生内容只看到"最近一小段"就开始编造
+  const summaryText=(g.summaries&&g.summaries.length)?g.summaries.map(s=>s.content).join('\n'):'';
+  const allNpcsInfo=(g.npcs||[]).map(n=>`${n.name}（${n.gender||'性别未知'}，好感${n.affection||0}，${(n.description||'').slice(0,30)}）`).join('、');
+  // mkNpcInfo只含基本信息，不含记忆（避免衍生内容被记忆主导而不看正文）
+  const mkNpcInfo=n=>n?`${n.name}（${n.gender||'性别未知'}，${n.description||''}；好感${n.affection}）`:'';
+  const cpNames=selectedNpcs.map(n=>n.name).join('、');
+
+  const CP_STYLE_MAP={
+    sweet:'风格：甜蜜日常，温馨互动，制造糖分',
+    funny:'风格：爆笑误会，荒诞喜剧，夸张搞笑',
+    angsty:'风格：虐心错过，情感张力，遗憾与羁绊',
+    swap:'风格：人设对调，两人性格互换后的有趣化学反应',
+    ooc:'风格：轻微OOC，角色偶尔展现不常见的一面，带点反差萌'
+  };
+  const cpStyleNote = fgState.cpStyle ? CP_STYLE_MAP[fgState.cpStyle]||'' : '风格：自由发挥，按剧情氛围';
+  const auNote = fgState.auType ? `AU世界观：${fgState.auType}` : '在原世界观下创作';
+
+  const TYPE_PROMPTS={
+    npc_forum:`以${primaryNpc?.name}（${primaryNpc?.gender||'性别未知'}）的身份，写TA在论坛/社区发的一个帖子，风格符合TA的性格（${primaryNpc?.diaryStyle||'正常网络语气'}），内容隐晦或直白地反映当前剧情状态和内心状态，可以有图片描述、表情包描述、评论互动。300字左右。严格按性别使用自称。`,
+    diary:`以${primaryNpc?.name}（${primaryNpc?.gender||'性别未知'}）第一人称写当天日记，风格${primaryNpc?.diaryStyle||'真实内省'}，300字，严格按性别使用正确人称。`,
+    weibo:`以${primaryNpc?.name}（${primaryNpc?.gender||'性别未知'}）口吻写一条朋友圈，风格${primaryNpc?.weiboStyle||'简短意有所指'}。其他角色（${allNpcsInfo}）可评论，挑1-2个写，注意性别。格式：【正文】\n💬角色名：评论`,
+    forum:`写论坛帖讨论玩家${g.player.name}的行动，3-5楼八卦视角。人物：${allNpcsInfo}，注意性别，可有误解猜测。`,
+    memory:`写一段诗化「命运记忆碎片」，旁观视角，意象化语言，300字，偏文学性。`,
+    gossip:`写NPC间流传的八卦，关于玩家${g.player.name}，人物：${allNpcsInfo}，注意性别，200字，轻松八卦。`,
+    their_view:`以${primaryNpc?.name}（${primaryNpc?.gender||'性别未知'}）内心视角，根据当前好感度（${primaryNpc?.affection||0}）和已有经历，写TA如何看待玩家${g.player.name}。好感度高则温柔/依赖，低则警惕/冷淡，中等则矛盾/复杂。有主观滤镜和情绪色彩，300字，按性别使用自称。`,
+    cp_story:`写一篇关于${cpNames}与${g.player.name}的同人短文（非论坛体，用小说叙事格式）。${cpStyleNote}。${auNote}。
+角色信息：${g.player.name}（${g.player.background||'主角'}），${selectedNpcs.map(mkNpcInfo).join('；')}。
+要求：①用角色真实姓名，不用"主角""男主"等代称；②第三人称叙事；③300字左右，有场景、动作、对话；④风格自然，不像帖子或评论。`,
+    cp_au:`写一篇AU同人短文（小说叙事格式）：${g.player.name}与${cpNames}，${auNote}，${cpStyleNote}。
+角色信息：${g.player.name}（${g.player.background||'主角'}），${selectedNpcs.map(mkNpcInfo).join('；')}。
+要求：①用角色真实姓名；②在新设定下保持性格核心；③第三人称叙事，300字左右，有场景感；④不写帖子/评论格式。`,
+    phone:`生成${primaryNpc?.name}的手机界面，直接输出HTML，格式如下（照抄CSS类名）：
+<div class="phone-frame">
+<div class="phone-app-tabs"><div class="phone-tab active" onclick="this.closest('.phone-frame').querySelectorAll('.phone-tab').forEach(t=>t.classList.remove('active'));this.classList.add('active');this.closest('.phone-frame').querySelectorAll('.phone-content').forEach(c=>c.style.display='none');this.closest('.phone-frame').querySelector('.pc-msg').style.display='block'">消息</div><div class="phone-tab" onclick="this.closest('.phone-frame').querySelectorAll('.phone-tab').forEach(t=>t.classList.remove('active'));this.classList.add('active');this.closest('.phone-frame').querySelectorAll('.phone-content').forEach(c=>c.style.display='none');this.closest('.phone-frame').querySelector('.pc-memo').style.display='block'">备忘录</div></div>
+<div class="phone-content pc-msg">
+<div class="phone-chat-item"><div class="phone-contact">💬 联系人姓名</div><div class="phone-bubble-row"><div class="phone-bubble them">对方说的话</div></div><div class="phone-bubble-row me"><div class="phone-bubble me">我说的话</div></div><div class="phone-comment">${primaryNpc?.name}：内心想法</div></div>
+</div>
+<div class="phone-content pc-memo" style="display:none"><div class="memo-item">📝 备忘内容</div></div>
+</div>
+生成2-3个聊天对象，每组4-6条消息，内容符合当前剧情和角色性格，严格按性别使用自称。只输出HTML，不加任何说明。`,
+    feed:`生成刷帖子界面，直接输出HTML，格式如下：
+<div class="feed-card"><span class="feed-tag">话题标签</span><div class="feed-text">帖子正文内容</div><div class="feed-imgs">🖼 图片描述</div><div class="feed-comments"><div class="feed-comment"><b>评论者名字</b>：评论内容</div></div></div>
+生成4-5个feed-card，类型混合（时尚/美食/情感/日常等），其中1-2条评论区由真实角色出现。只输出HTML，不加任何说明。`,
+    timeline:`生成${primaryNpc?.name}的个人主页时间线，直接输出HTML，格式如下：
+<div style="padding:4px 0"><div class="tl-post"><div class="tl-date">3天前</div><div class="tl-text">内容</div><div class="tl-imgs">🖼 图片</div></div></div>
+生成5-6条tl-post，由近到远，内容隐晦反映${primaryNpc?.name}当前心境。只输出HTML，不加任何说明。`
+  };
+
+  // phone/feed/timeline 直接输出HTML，不需要JSON解析
+  const needHtml=['phone','feed','timeline'].includes(type);
+  const needJson=false; // 不再使用JSON模式
+  const userContent=`世界观：${(g.worldSetting||'').slice(0,200)}\n\n${summaryText?'【剧情摘要——已发生的关键事件，创作必须基于这些真实事实】\n'+summaryText.slice(0,1200)+'\n\n':''}【最近剧情原文】\n${recentNarr||'（暂无剧情，游戏刚开始）'}\n\n${primaryNpc?mkNpcInfo(primaryNpc)+'\n\n':''}全体角色：${allNpcsInfo}\n玩家：${g.player.name}（${g.player.background||''}）\n\n任务：${TYPE_PROMPTS[type]}`;
+  const sys=`你是互动小说辅助叙述者。${needHtml?'只输出HTML代码，不加任何说明文字或markdown标记。':'直接输出内容，不加格式标记。'}严格遵守每个角色的性别，不得混淆。内容必须基于上面提供的剧情摘要与最近剧情原文中真实发生的事，禁止脱离实际剧情编造未发生过的重大关系进展或情节。`;
+
+  try{
+    const tokens = needHtml ? 2500 : 1500;
+    const raw=await withTimeout(callAI(sys,[{role:'user',content:userContent}], false, tokens));
+    let content=raw.replace(/^```html\s*/i,'').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
+    if(!content){ toast('生成内容为空，请重试'); return; }
+
+    // HTML类型直接保存为isHtml
+    const isHtml = needHtml;
+
+    const npcName=selectedNpcs.length>1 ? cpNames : (primaryNpc?.name||'路人');
+    const frag={id:uid(),npcIds:fgState.npcIds,npcName,type,content,
+      createdAt:new Date().toISOString(),chapterRef:g.chapter,isHtml};
+    g.fragments=g.fragments||[];
+    g.fragments.push(frag);
+    save(); toast('碎片已生成'); switchTab('fragment');
+  }catch(e){ toast('生成失败: '+e.message); }
+}
+
+function renderFragmentHTML(type, data, npc, playerName){
+  if(type==='phone'){
+    const rid='ph'+Date.now().toString(36); // 随机id避免多碎片冲突
+    const chatsHtml=(data.chats||[]).map(c=>`
+      <div class="phone-chat-item">
+        <div class="phone-contact">💬 ${esc(c.contact)}</div>
+        ${(c.messages||[]).map(m=>`<div class="phone-bubble-row ${m.from==='me'?'me':''}"><div class="phone-bubble ${m.from==='me'?'me':'them'}">${esc(m.text)}</div></div>`).join('')}
+        ${c.comment?`<div class="phone-comment">${esc(npc?.name||'')}：${esc(c.comment)}</div>`:''}
+      </div>`).join('');
+    const memosHtml=(data.memos||[]).map(m=>`<div class="memo-item">📝 ${esc(typeof m==='string'?m:m.content||'')}</div>`).join('');
+    const shopHtml=(data.shopping||[]).map(s=>`<div class="shop-item"><span class="shop-name">${esc(s.name)}</span><div style="text-align:right"><div class="shop-price">${esc(s.price)}</div><div class="phone-comment" style="margin-top:2px;padding:0">${esc(s.comment||'')}</div></div></div>`).join('');
+    return `<div class="phone-frame">
+      <div class="phone-app-tabs">
+        <div class="phone-tab active" onclick="phoneTabById(this,'${rid}-chats','${rid}')">消息</div>
+        <div class="phone-tab" onclick="phoneTabById(this,'${rid}-memos','${rid}')">备忘录</div>
+        <div class="phone-tab" onclick="phoneTabById(this,'${rid}-shop','${rid}')">购物</div>
+      </div>
+      <div class="phone-content" id="${rid}-chats">${chatsHtml||'<div class="hint-text">暂无消息</div>'}</div>
+      <div class="phone-content" id="${rid}-memos" style="display:none">${memosHtml||'<div class="hint-text">暂无备忘</div>'}</div>
+      <div class="phone-content" id="${rid}-shop" style="display:none">${shopHtml||'<div class="hint-text">暂无购物</div>'}</div>
+    </div>`;
+  }
+  if(type==='feed'){
+    return (data.posts||[]).map(p=>`<div class="feed-card">
+      ${p.tag?`<span class="feed-tag">${esc(p.tag)}</span>`:''}
+      <div class="feed-text">${esc(p.text).replace(/\n/g,'<br>')}</div>
+      ${p.images?`<div class="feed-imgs">🖼 ${esc(p.images)}</div>`:''}
+      <div class="feed-comments">${(p.comments||[]).map(c=>`<div class="feed-comment"><b>${esc(c.user)}</b>：${esc(c.text).replace(new RegExp('@'+playerName,'g'),`<span class="at">@${esc(playerName)}</span>`)}</div>`).join('')}</div>
+    </div>`).join('');
+  }
+  if(type==='timeline'){
+    return `<div style="padding:4px 0">${(data.posts||[]).map(p=>`<div class="tl-post">
+      <div class="tl-date">${esc(p.date||'')}</div>
+      <div class="tl-text">${esc(p.text).replace(/\n/g,'<br>')}</div>
+      ${p.images?`<div class="tl-imgs">🖼 ${esc(p.images)}</div>`:''}
+    </div>`).join('')}</div>`;
+  }
+  return '';
+}
+
+// ─────────────────────────────────────────────
+//  INTERVENE（干预）
+// ─────────────────────────────────────────────
+function openIntervene(){ document.getElementById('intervene-modal').style.display='flex'; document.getElementById('intervene-extra').innerHTML=''; }
+function closeIntervene(){ document.getElementById('intervene-modal').style.display='none'; }
+
+function interveneUndo(){
+  const g=cg(); if(!g) return;
+  // 删除最后一条 narrative/check 叙述
+  for(let i=g.narrativeHistory.length-1;i>=0;i--){
+    if(g.narrativeHistory[i].type==='narrative'||g.narrativeHistory[i].type==='check'){
+      g.narrativeHistory.splice(i,1); break;
+    }
+  }
+  // 同步删除 messages 里最后的 assistant 回复
+  for(let i=g.messages.length-1;i>=0;i--){
+    if(g.messages[i].role==='assistant'){ g.messages.splice(i,1); break; }
+  }
+  save(); closeIntervene(); renderNarrativeHistory(); renderOptions(g._opts||[]);
+  toast('已撤回');
+}
+
+function interveneRegen(){
+  const g=cg(); if(!g||!_lastAction) return;
+  // 删掉最后的 assistant 回复和对应 narrative
+  for(let i=g.messages.length-1;i>=0;i--){
+    if(g.messages[i].role==='assistant'){ g.messages.splice(i,1); break; }
+  }
+  for(let i=g.narrativeHistory.length-1;i>=0;i--){
+    if(g.narrativeHistory[i].type==='narrative'||g.narrativeHistory[i].type==='check'){
+      g.narrativeHistory.splice(i,1); break;
+    }
+  }
+  // 同样删掉最后的 user 消息，让 doAction 重新 push
+  for(let i=g.messages.length-1;i>=0;i--){
+    if(g.messages[i].role==='user'){ g.messages.splice(i,1); break; }
+  }
+  closeIntervene();
+  doAction(_lastAction);
+}
+
+function interveneDirector(){
+  const ex=document.getElementById('intervene-extra');
+  ex.innerHTML=`<div class="form-group">
+    <label class="form-label">导演指令（对后续叙述生效）</label>
+    <textarea class="form-input form-textarea" id="director-input" placeholder="例：让剧情向误会方向发展；让某角色展现软弱一面" style="min-height:70px"></textarea>
+  </div>
+  <div class="wizard-nav"><div class="btn-secondary" onclick="document.getElementById('intervene-extra').innerHTML=''">取消</div><div class="btn-primary" onclick="applyDirector()">注入指令</div></div>`;
+}
+function applyDirector(){
+  const g=cg(); if(!g) return;
+  const txt=document.getElementById('director-input')?.value.trim(); if(!txt) return;
+  g._directorNote = txt;
+  save(); closeIntervene(); toast('导演指令已注入，下一轮生效');
+}
+
+function interveneInsert(){
+  const ex=document.getElementById('intervene-extra');
+  ex.innerHTML=`<div class="form-group">
+    <label class="form-label">插入事件（作为已发生事实）</label>
+    <textarea class="form-input form-textarea" id="insert-input" placeholder="例：此刻走廊里突然停电了；其实沈清砚早已知道真相" style="min-height:70px"></textarea>
+  </div>
+  <div class="wizard-nav"><div class="btn-secondary" onclick="document.getElementById('intervene-extra').innerHTML=''">取消</div><div class="btn-primary" onclick="applyInsert()">插入</div></div>`;
+}
+function applyInsert(){
+  const g=cg(); if(!g) return;
+  const txt=document.getElementById('insert-input')?.value.trim(); if(!txt) return;
+  g.narrativeHistory.push({type:'narrative',content:`【插入事件】${txt}`});
+  g.messages.push({role:'user',content:`（旁白补充：${txt}）`});
+  save(); closeIntervene(); renderNarrativeHistory(); toast('事件已插入');
+}
+
+function interveneEdit(){
+  const g=cg(); if(!g) return;
+  // 找最后一条 narrative
+  let last=null;
+  for(let i=g.narrativeHistory.length-1;i>=0;i--){
+    if(g.narrativeHistory[i].type==='narrative'){ last={idx:i,item:g.narrativeHistory[i]}; break; }
+  }
+  if(!last){ toast('没有可编辑的叙述'); return; }
+  const ex=document.getElementById('intervene-extra');
+  ex.innerHTML=`<div class="form-group">
+    <label class="form-label">编辑叙述（仅影响显示）</label>
+    <textarea class="form-input form-textarea" id="edit-input" style="min-height:100px">${esc(last.item.content)}</textarea>
+  </div>
+  <div class="wizard-nav"><div class="btn-secondary" onclick="document.getElementById('intervene-extra').innerHTML=''">取消</div><div class="btn-primary" onclick="applyEdit(${last.idx})">保存</div></div>`;
+}
+function applyEdit(idx){
+  const g=cg(); if(!g) return;
+  const txt=document.getElementById('edit-input')?.value.trim(); if(!txt) return;
+  g.narrativeHistory[idx].content=txt;
+  save(); closeIntervene(); renderNarrativeHistory(); toast('叙述已修改');
+}
+function interveneAddNpc(){
+  const ex=document.getElementById('intervene-extra');
+  ex.innerHTML=`<div class="form-group">
+    <label class="form-label">手动添加角色到角色卡</label>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <input class="form-input" id="add-npc-name" placeholder="姓名" style="flex:1">
+      <select class="form-input" id="add-npc-gender" style="width:80px;padding:12px 6px"><option value="">未知</option><option value="男">男</option><option value="女">女</option><option value="其他">其他</option></select>
+    </div>
+    <input class="form-input" id="add-npc-desc" placeholder="描述（身份、性格……）" style="margin-bottom:6px">
+  </div>
+  <div class="wizard-nav"><div class="btn-secondary" onclick="document.getElementById('intervene-extra').innerHTML=''">取消</div><div class="btn-primary" onclick="applyAddNpc()">添加</div></div>`;
+}
+function applyAddNpc(){
+  const g=cg(); if(!g) return;
+  const name=document.getElementById('add-npc-name')?.value.trim();
+  if(!name){ toast('请填写姓名'); return; }
+  if(g.npcs.find(n=>n.name===name)){ toast('角色已存在'); return; }
+  const gender=document.getElementById('add-npc-gender')?.value||'';
+  const desc=document.getElementById('add-npc-desc')?.value.trim()||'';
+  g.npcs.push({id:uid(),name,description:desc,gender,diaryStyle:'',weiboStyle:'',affection:0,difficultyFactor:3,knownEvents:[],characterMemo:''});
+  save(); closeIntervene(); toast(`已添加角色「${name}」`);
+  if(document.querySelector('.tab[data-tab="character"]')?.classList.contains('active')) renderCharacter();
+}
+function interveneSummary(){
+  const g=cg(); if(!g) return;
+  const ex=document.getElementById('intervene-extra'); if(!ex) return;
+  const sumList=(g.summaries||[]);
+  const sumHtml=sumList.length
+    ? sumList.map((s,i)=>`<div style="margin-bottom:10px;padding:8px 10px;background:var(--bg);border-radius:8px;border:1px solid var(--border)"><div style="font-size:10px;color:var(--text3);font-family:'Noto Sans SC',sans-serif;margin-bottom:4px">第${i+1}段摘要</div><div style="font-size:12px;color:var(--text2);font-family:'Noto Sans SC',sans-serif;line-height:1.7">${esc(s.content)}</div></div>`).join('')
+    : '<div class="hint-text">暂无摘要</div>';
+  ex.innerHTML=`<div class="form-group">
+    <label class="form-label">剧情摘要（注入AI记忆）</label>
+    <div style="max-height:220px;overflow-y:auto">${sumHtml}</div>
+  </div>
+  <div class="wizard-nav">
+    <div class="btn-secondary" style="flex:1;cursor:pointer" onclick="document.getElementById('intervene-extra').innerHTML=''">关闭</div>
+    <div class="btn-primary" onclick="autoSummary(cg(),true)">生成新摘要</div>
+  </div>`;
+}
+
+function interveneNarrate(){
+  const ex=document.getElementById('intervene-extra'); if(!ex) return;
+  ex.innerHTML=`<div class="form-group">
+    <label class="form-label">插入旁白/总结（绕过玩家规则，直接作为叙事事实）</label>
+    <textarea class="form-input form-textarea" id="narrate-input" placeholder="例：此后三日，顾律一直避开裴则……&#10;例：【总结】本章玩家与林清羽建立了初步信任……" style="min-height:90px"></textarea>
+  </div>
+  <div class="wizard-nav">
+    <div class="btn-secondary" onclick="document.getElementById('intervene-extra').innerHTML=''">取消</div>
+    <div class="btn-primary" onclick="applyNarrate()">插入</div>
+  </div>`;
+}
+
+function applyNarrate(){
+  const g=cg(); if(!g) return;
+  const txt=document.getElementById('narrate-input')?.value.trim(); if(!txt) return;
+  // 作为 assistant 叙述插入（绕过玩家自主性规则，直接成为已发生事实）
+  g.narrativeHistory.push({type:'narrative', content:txt});
+  g.messages.push({role:'assistant', content:JSON.stringify({
+    scene_advance:'旁白插入',narrative:txt,options:[],check:null,state_changes:{}
+  })});
+  save(); closeIntervene(); renderNarrativeHistory();
+  toast('旁白已插入');
+}
+
+function intervenePlans(){
+  const g=cg(); if(!g) return;
+  const ex=document.getElementById('intervene-extra'); if(!ex) return;
+  const listHtml=(g.activePlans||[]).map((p,i)=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+    <span style="flex:1;font-size:12px;color:var(--text2);font-family:'Noto Sans SC',sans-serif">${esc(p)}</span>
+    <button class="rm-btn" onclick="removePlan(${i})">×</button></div>`).join('');
+  ex.innerHTML=`<div class="form-group">
+    <label class="form-label">进行中的计划/目标（每轮注入AI）</label>
+    <div id="plans-list">${listHtml||'<div class="hint-text">暂无计划</div>'}</div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <input class="form-input" id="plan-input" placeholder="添加计划，如：调查书院的秘密" style="flex:1">
+      <button class="import-btn" onclick="addPlan()">添加</button>
+    </div>
+  </div>`;
+}
+function addPlan(){
+  const g=cg(); if(!g) return;
+  const t=document.getElementById('plan-input')?.value.trim(); if(!t) return;
+  g.activePlans=g.activePlans||[]; g.activePlans.push(t); save();
+  document.getElementById('plan-input').value='';
+  intervenePlans();
+}
+function removePlan(i){
+  const g=cg(); if(!g) return;
+  g.activePlans=g.activePlans||[]; g.activePlans.splice(i,1); save();
+  intervenePlans();
+}
+
+let _gsetTab='rules';
+
+function openGset(){
+  const g=cg(); if(!g){toast('请先选择游戏');return;}
+  _gsetTab='rules';
+  document.querySelectorAll('.mtab').forEach(t=>t.classList.toggle('active',t.dataset.gt==='rules'));
+  document.getElementById('gset-modal').style.display='flex';
+  renderGsetBody();
+}
+function closeGset(){ document.getElementById('gset-modal').style.display='none'; save(); }
+function switchGsetTab(t){
+  _gsetTab=t;
+  document.querySelectorAll('.mtab').forEach(b=>b.classList.toggle('active',b.dataset.gt===t));
+  renderGsetBody();
+}
+
+function renderGsetBody(){
+  const g=cg(); if(!g) return;
+  g.style=g.style||{...DEF_STYLE};
+  const st=g.style;
+  // 旧存档没有这些新字段时，规范化为true（=默认开启），避免开关第一次点击时"取反undefined"跳不到关闭状态
+  ['ruleAutonomy','ruleFormat','ruleProgress','ruleAffection','ruleNewNpc','ruleSelfCheck'].forEach(k=>{ if(st[k]===undefined) st[k]=true; });
+  const body=document.getElementById('gset-body');
+
+  if(_gsetTab==='rules'){
+    const tgl=(key)=>`<div class="toggle-wrap ${st[key]!==false?'on':''}" onclick="gsToggle('${key}',this)"></div>`;
+    const ruleKeys=['ruleAutonomy','ruleFormat','ruleProgress','ruleAffection','ruleNewNpc','ruleSelfCheck'];
+    const ruleRows=ruleKeys.map(k=>{
+      const[label,hint]=RULE_LABELS[k];
+      return `<div class="style-row"><div class="style-left"><div class="style-lbl">${label}</div><div class="style-hint">${hint}</div></div>${tgl(k)}</div>`;
+    }).join('');
+    body.innerHTML=`<div class="gset-section">
+      <div class="hint-text" style="margin-bottom:8px">关掉的规则会从提示词里整段删除（不是留着不生效），避免和下面的自定义规则打架。怀疑内置规则在干扰、想验证自定义规则本身是否有效时，可以先全部关掉做纯净测试。</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <div class="btn-secondary" style="flex:1;text-align:center;font-size:12px;padding:6px" onclick="gsAllRules(true)">全部开启</div>
+        <div class="btn-secondary" style="flex:1;text-align:center;font-size:12px;padding:6px" onclick="gsAllRules(false)">全部关闭（纯净测试）</div>
+      </div>
+      ${ruleRows}
+      <div class="form-group" style="margin-top:16px">
+        <label class="form-label">自定义规则（最高优先级）</label>
+        <textarea class="form-input form-textarea" style="min-height:140px" placeholder="用你自己的话写规则，比如叙述该怎么分段、语气该是什么样、好感度怎么算……写在这里的内容优先级高于上面所有开着的内置规则，冲突时以这里为准。涉及成人内容的话必须在这里明确写出允许，系统不会有默认立场（比如：这是面向成年人的虚构创作，人物均为成年，允许详细描写亲密场景，不要回避或转场）。" oninput="gsSet('customRules',this.value)">${esc(st.customRules||'')}</textarea>
+        <div class="hint-text">JSON输出的字段结构（narrative/options/state_changes等）是解析代码依赖的契约，不在这里开放编辑，写了也不会生效。</div>
+      </div>
+      <div class="form-group" style="margin-top:16px">
+        <label class="form-label">硬性长度上限</label>
+        <input type="number" class="form-input" style="width:100px" min="300" max="4000" step="50" value="${st.maxTokens||900}" onchange="gsSet('maxTokens',Math.max(300,+this.value||900))">
+        <div class="hint-text">单位是token（不是字数，中文大致1 token≈1.5-2字）。这是物理硬上限，不是"建议"——AI写太长会被直接截断，比规则文字管用但也更粗暴：调太低可能把结尾切掉，甚至连累后面的角色/好感度数据丢失。默认900，嫌短就调大，嫌AI还是啰嗦就调小。</div>
+      </div>
+      <div class="wizard-nav"><div class="btn-primary" onclick="closeGset()">完成</div></div>
+    </div>`;
+  } else if(_gsetTab==='chars'){
+    const npcHtml=(g.npcs||[]).map(n=>`<div class="npc-item">
+      <div class="npc-item-hdr">
+        <span class="npc-item-name">${esc(n.name||'未命名')}${n.autoAdded?'<span style="font-size:10px;color:var(--text3);margin-left:4px">剧情</span>':''}</span>
+        <button class="rm-btn" onclick="gsDelNpc('${n.id}')">×</button>
+      </div>
+      <div class="form-group"><label class="form-label">姓名</label><input class="form-input" value="${esc(n.name||'')}" oninput="gsUpdNpc('${n.id}','name',this.value)"></div>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <div style="flex:2"><label class="form-label">描述</label><input class="form-input" value="${esc(n.description||'')}" oninput="gsUpdNpc('${n.id}','description',this.value)"></div>
+        <div style="flex:1"><label class="form-label">性别</label><select class="form-input" style="padding:12px 8px" onchange="gsUpdNpc('${n.id}','gender',this.value)"><option value="" ${!n.gender?'selected':''}>未知</option><option value="男" ${n.gender==='男'?'selected':''}>男</option><option value="女" ${n.gender==='女'?'selected':''}>女</option><option value="其他" ${n.gender==='其他'?'selected':''}>其他</option></select></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <div style="flex:1"><label class="form-label">初始好感 (0-100)</label><input class="form-input" type="number" min="0" max="100" value="${n.affection||0}" oninput="gsUpdNpc('${n.id}','affection',Math.min(100,Math.max(0,+this.value)))"></div>
+        <div style="flex:1"><label class="form-label">攻略难度 (1-5)</label><input class="form-input" type="number" min="1" max="5" value="${n.difficultyFactor||3}" oninput="gsUpdNpc('${n.id}','difficultyFactor',Math.min(5,Math.max(1,+this.value)))"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:0"><label class="form-label">日记风格</label><input class="form-input" value="${esc(n.diaryStyle||'')}" placeholder="例：克制、多用比喻" oninput="gsUpdNpc('${n.id}','diaryStyle',this.value)"></div>
+    </div>`).join('');
+    body.innerHTML=`<div class="gset-section">
+      <div class="npc-builder" id="gs-npcs">${npcHtml||'<div class="hint-text">还没有角色</div>'}</div>
+      <div class="import-row">
+        <button class="add-btn" style="flex:1" onclick="gsAddNpc()">＋ 手动添加</button>
+        <button class="import-btn" onclick="openNpcPaste()">粘贴导入</button>
+        <button class="import-btn" onclick="document.getElementById('fi-npc').click()">📄 文件</button>
+      </div>
+      <button class="import-btn" style="width:100%;margin-top:8px" onclick="aiEstimateAllNpcs()">✨ AI推算所有角色初始好感度</button>
+      <div class="hint-text" style="margin-top:4px">根据角色描述推算初始好感(0-40)和攻略难度(1-5)，可手动覆盖</div>
+      <div id="gs-estimate-result"></div>
+      <div class="hint-text" style="margin-top:8px">「剧情」标记的角色由AI自动从故事中发现</div>
+      <div class="wizard-nav"><div class="btn-primary" onclick="closeGset()">完成</div></div>
+    </div>`;
+  } else if(_gsetTab==='world'){
+    body.innerHTML=`<div class="gset-section">
+      <div class="form-group"><label class="form-label">故事名称</label><input class="form-input" value="${esc(g.name)}" oninput="gsUpdGame('name',this.value)"></div>
+      <div class="form-group">
+        <label class="form-label">世界观设定</label>
+        <textarea class="form-input form-textarea" id="gs-world" style="min-height:130px" oninput="gsUpdGame('worldSetting',this.value)">${esc(g.worldSetting)}</textarea>
+        <div class="import-row" style="margin-top:6px">
+          <button class="import-btn" style="flex:1" onclick="document.getElementById('fi-world').click()">📄 从文件导入</button>
+        </div>
+        <div class="hint-text">修改只影响后续叙述，已有剧情不变</div>
+      </div>
+      <div class="form-group"><label class="form-label">当前章节</label><input class="form-input" value="${esc(g.chapter)}" oninput="gsUpdGame('chapter',this.value)"></div>
+      <div class="wizard-nav">
+        <div class="btn-secondary" style="flex:1;cursor:pointer" onclick="exportGame();closeGset()">导出</div>
+        <div class="btn-danger" onclick="if(confirm('确认删除此存档？'))deleteGset()">删除</div>
+        <div class="btn-primary" onclick="closeGset()">完成</div>
+      </div>
+    </div>`;
+  }
+}
+
+function gsSet(key,val){ const g=cg(); if(!g) return; g.style=g.style||{...DEF_STYLE}; g.style[key]=val; g._settingsChangedNote=true; }
+function gsToggle(key,el){ const g=cg(); if(!g) return; g.style=g.style||{...DEF_STYLE}; g.style[key]=!g.style[key]; el.classList.toggle('on',g.style[key]); g._settingsChangedNote=true; }
+function gsAllRules(on){
+  const g=cg(); if(!g) return; g.style=g.style||{...DEF_STYLE};
+  ['ruleAutonomy','ruleFormat','ruleProgress','ruleAffection','ruleNewNpc','ruleSelfCheck'].forEach(k=>{ g.style[k]=on; });
+  g._settingsChangedNote=true;
+  renderGsetBody();
+}
+function gsUpdGame(key,val){ const g=cg(); if(!g) return; g[key]=val; }
+function gsUpdNpc(id,k,v){
+  const g=cg(); if(!g) return;
+  const n=g.npcs.find(x=>x.id===id); if(!n) return;
+  // affection和difficultyFactor强制转数字
+  if(k==='affection') n[k]=Math.min(100,Math.max(0,Number(v)||0));
+  else if(k==='difficultyFactor') n[k]=Math.min(5,Math.max(1,Number(v)||3));
+  else n[k]=v;
+}
+function gsDelNpc(id){ const g=cg(); if(!g) return; g.npcs=g.npcs.filter(n=>n.id!==id); save(); renderGsetBody(); }
+function gsAddNpc(){ const g=cg(); if(!g) return; g.npcs.push({id:uid(),name:'',description:'',diaryStyle:'',weiboStyle:'',affection:0,difficultyFactor:3,knownEvents:[],characterMemo:''}); save(); renderGsetBody(); }
+function deleteGset(){ const g=cg(); if(!g) return; delete S.games[S.currentId]; S.currentId=null; save(); closeGset(); switchTab('history'); }
+
+async function aiEstimateAllNpcs(){
+  const g=cg(); if(!g||!g.npcs.length){ toast('没有角色可推算'); return; }
+  const res=document.getElementById('gs-estimate-result');
+  if(res) res.innerHTML='<div class="hint-text" style="margin-top:6px">AI推算中……</div>';
+  await _aiEstimateNpcs(g.npcs, g.worldSetting);
+  save(); renderGsetBody();
+  toast('推算完成');
+}
+
+async function aiEstimateWzNpcs(){
+  if(!wzData.npcs.length){ toast('没有角色可推算'); return; }
+  const res=document.getElementById('wz-estimate-result');
+  if(res) res.innerHTML='<div class="hint-text" style="margin-top:6px">AI推算中……</div>';
+  await _aiEstimateNpcs(wzData.npcs, wzData.worldSetting);
+  renderWzNpcs();
+  toast('推算完成');
+}
+
+async function _aiEstimateNpcs(npcs, worldSetting){
+  if(!npcs.length){ toast('没有角色可推算'); return; }
+  const list=npcs.filter(n=>n.name).map(n=>`${n.name}：${n.description||'无描述'}`).join('\n');
+  if(!list.trim()){ toast('请先填写角色名和描述'); return; }
+  try{
+    const raw=await withTimeout(callAI(
+      '你是角色关系分析助手。根据角色描述，推算每个角色对玩家的初始好感度和攻略难度。输出严格JSON数组，每项必须包含：{"name":"角色名","affection":整数(0到40之间),"difficultyFactor":整数(1到5之间),"reason":"理由"}。affection=0表示完全陌生/敌视，40表示已有较好印象。difficultyFactor=1非常容易攻略，5极难。不得输出其他内容。',
+      [{role:'user',content:`世界观：${(worldSetting||'').slice(0,300)}\n\n角色列表：\n${list}`}],
+      true
+    ));
+    const cleaned=raw.replace(/```json\n?|```\n?/g,'').trim();
+    const arr=JSON.parse(cleaned);
+    if(!Array.isArray(arr)) throw new Error('返回格式不是数组');
+    let updated=0;
+    arr.forEach(item=>{
+      if(!item.name) return;
+      const n=npcs.find(x=>x.name===item.name);
+      if(n){
+        const aff=parseInt(item.affection);
+        const diff=parseInt(item.difficultyFactor);
+        if(!isNaN(aff)) n.affection=Math.min(40,Math.max(0,aff));
+        if(!isNaN(diff)) n.difficultyFactor=Math.min(5,Math.max(1,diff));
+        updated++;
+      }
+    });
+    if(updated===0) toast('未匹配到任何角色，请检查名字是否一致');
+    else toast(`已推算 ${updated} 个角色`);
+  }catch(e){ toast('推算失败: '+e.message); }
+}
+
+// ─────────────────────────────────────────────
+//  FILE & PASTE IMPORTS
+// ─────────────────────────────────────────────
+function handleWorldFile(e){
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    const g=cg();
+    const txt=ev.target.result;
+    if(g){ g.worldSetting=txt; save(); const ta=document.getElementById('gs-world'); if(ta) ta.value=txt; toast('世界观已导入'); }
+    else{ wzData.worldSetting=txt; const ta=document.getElementById('wz-world'); if(ta) ta.value=txt; toast('世界观已导入'); }
+  };
+  r.readAsText(f,'utf-8'); e.target.value='';
+}
+
+function openNpcPaste(){
+  document.getElementById('npc-paste-text').value='';
+  document.getElementById('npc-paste-result').innerHTML='';
+  const nav=document.getElementById('npc-paste-nav');
+  if(nav) nav.innerHTML=`<div class="btn-secondary" onclick="closeNpcPaste()">取消</div><div class="btn-primary" onclick="parseNpcPaste()">AI解析并导入</div>`;
+  // 记录打开时的上下文，防止异步期间 wizard 状态变化
+  _npcImportCtx = document.getElementById('wizard-modal').style.display !== 'none' ? 'wizard' : 'gset';
+  document.getElementById('npc-paste-modal').style.display='flex';
+}
+
+let _npcImportCtx = 'gset'; // 'wizard' | 'gset'
+
+function closeNpcPaste(){
+  document.getElementById('npc-paste-modal').style.display='none';
+  const nav=document.getElementById('npc-paste-nav');
+  if(nav) nav.innerHTML=`<div class="btn-secondary" onclick="closeNpcPaste()">取消</div><div class="btn-primary" onclick="parseNpcPaste()">AI解析并导入</div>`;
+}
+
+function onNpcPasteDone(){
+  document.getElementById('npc-paste-modal').style.display='none';
+  if(_npcImportCtx==='wizard') renderWzNpcs();
+  else renderGsetBody();
+}
+
+async function parseNpcPaste(){
+  const txt=document.getElementById('npc-paste-text').value.trim();
+  if(!txt){ toast('请先粘贴角色设定'); return; }
+  const res=document.getElementById('npc-paste-result');
+  res.innerHTML='<div class="hint-text" style="margin-top:8px">AI解析中……</div>';
+  const inWizard = _npcImportCtx === 'wizard';
+  const target = inWizard ? null : cg();
+  try{
+    const raw=await withTimeout(callAI(
+      '你是角色信息提取助手。从文本中提取所有角色，严格输出JSON数组，每项：{"name":"姓名","description":"身份性格描述","diaryStyle":"写作风格（若有）"}。不输出任何其他内容，无角色则输出[]。',
+      [{role:'user',content:'请提取以下文本中的角色信息：\n\n'+txt.slice(0,4000)}],
+      true
+    ));
+    const arr=JSON.parse(raw.replace(/```json\n?|```\n?/g,'').trim());
+    if(!arr.length){ res.innerHTML='<div class="hint-text" style="margin-top:8px;color:var(--red)">未识别到角色，请检查文本内容</div>'; return; }
+    let added=0;
+    arr.forEach(n=>{
+      if(!n.name) return;
+      const pool = target ? target.npcs : wzData.npcs;
+      if(!pool.find(x=>x.name===n.name)){
+        const npc={id:uid(),name:n.name,description:n.description||'',diaryStyle:n.diaryStyle||'',weiboStyle:'',affection:50,knownEvents:[],characterMemo:''};
+        if(target){ target.npcs.push(npc); save(); }
+        else wzData.npcs.push(npc);
+        added++;
+      }
+    });
+    const names=arr.map(n=>n.name).join('、');
+    res.innerHTML=`<div class="npc-imported">已识别 ${arr.length} 个角色：${esc(names)}<br>新增 ${added} 个（重名已跳过）</div>`;
+    const nav=document.getElementById('npc-paste-nav');
+    if(nav) nav.innerHTML=`<div class="btn-primary" onclick="onNpcPasteDone()">完成</div>`;
+    if(target) renderGsetBody(); else renderWzNpcs();
+  }catch(err){
+    res.innerHTML=`<div class="hint-text" style="margin-top:8px;color:var(--red)">解析失败：${esc(err.message)}</div>`;
+  }
+}
+
+async function handleNpcFile(e){
+  const f=e.target.files[0]; if(!f) return;
+  // 文件选取时立刻锁定上下文
+  _npcImportCtx = document.getElementById('wizard-modal').style.display !== 'none' ? 'wizard' : 'gset';
+  const r=new FileReader();
+  r.onload=async ev=>{
+    document.getElementById('npc-paste-text').value=ev.target.result;
+    document.getElementById('npc-paste-result').innerHTML='<div class="hint-text" style="margin-top:8px">AI解析中……</div>';
+    const nav=document.getElementById('npc-paste-nav');
+    if(nav) nav.innerHTML=`<div class="btn-secondary" onclick="closeNpcPaste()">取消</div>`;
+    document.getElementById('npc-paste-modal').style.display='flex';
+    await parseNpcPaste();
+  };
+  r.readAsText(f,'utf-8'); e.target.value='';
+}
+// 导入存档提炼（.md）
+async function handleSummaryImport(e){
+  const f=e.target.files[0]; if(!f) return;
+  e.target.value='';
+  const statusEl=document.getElementById('wz-import-status');
+  if(statusEl) statusEl.textContent='AI解析中……';
+  const r=new FileReader();
+  r.onload=async ev=>{
+    const txt=ev.target.result;
+    try{
+      const raw=await withTimeout(callAI(
+        `你是存档解析助手。从存档提炼文本中提取信息，严格输出JSON：
+{"name":"故事名称","worldSetting":"世界观全文","player":{"name":"玩家姓名","background":"背景","stats":[{"name":"属性名","value":数值}],"tags":["标签"],"items":["道具"]},"npcs":[{"name":"姓名","description":"描述","gender":"性别","affection":数值,"difficultyFactor":数值}],"chapter":"章节名"}
+如果某字段缺失则用合理默认值填充。不输出任何其他内容。`,
+        [{role:'user',content:txt.slice(0,6000)}],
+        true
+      ));
+      const data=JSON.parse(raw.replace(/^```json\s*/,'').replace(/```\s*$/,'').trim());
+      // 填入向导数据
+      if(data.name) wzData.name=data.name;
+      if(data.worldSetting) wzData.worldSetting=data.worldSetting;
+      if(data.chapter) wzData._importChapter=data.chapter;
+      if(data.player){
+        if(data.player.name) wzData.player.name=data.player.name;
+        if(data.player.background) wzData.player.background=data.player.background;
+        if(Array.isArray(data.player.stats)&&data.player.stats.length)
+          wzData.player.stats=data.player.stats.map(s=>({name:s.name,value:Math.min(100,Math.max(1,Number(s.value)||50))}));
+        if(Array.isArray(data.player.tags)) wzData.player.tags=[...data.player.tags];
+        if(Array.isArray(data.player.items)) wzData.player.items=[...data.player.items];
+      }
+      if(Array.isArray(data.npcs)&&data.npcs.length){
+        wzData.npcs=data.npcs.map(n=>({
+          id:uid(),name:n.name||'',description:n.description||'',
+          gender:n.gender||'',diaryStyle:'',weiboStyle:'',
+          affection:Math.min(100,Math.max(0,Number(n.affection)||0)),
+          difficultyFactor:Math.min(5,Math.max(1,Number(n.difficultyFactor)||3)),
+          knownEvents:[],characterMemo:''
+        }));
+      }
+      // 刷新当前向导步骤
+      renderWz();
+      if(statusEl) statusEl.textContent=`✓ 已解析：${data.name||''}，角色${wzData.npcs.length}人`;
+      if(statusEl) statusEl.style.color='var(--green)';
+    }catch(err){
+      if(statusEl){ statusEl.textContent='解析失败：'+err.message; statusEl.style.color='var(--red)'; }
+    }
+  };
+  r.readAsText(f,'utf-8');
+}
+
+// 导入完整存档（.json）——直接恢复游戏
+function handleJsonImport(e){
+  const f=e.target.files[0]; if(!f) return;
+  e.target.value='';
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const game=JSON.parse(ev.target.result);
+      if(!game.id||!game.name){ toast('无效的存档文件'); return; }
+      // 如果ID冲突则生成新ID
+      if(S.games[game.id]) game.id=uid();
+      game.lastPlayedAt=new Date().toISOString();
+      S.games[game.id]=game; S.currentId=game.id; save();
+      closeWz(); switchTab('game'); renderGamePage();
+      toast('存档已导入：'+game.name);
+    }catch(err){ toast('导入失败：'+err.message); }
+  };
+  r.readAsText(f,'utf-8');
+}
+function renderSettings() {
+  const {provider,keys,models}=S.settings;
+  S.settings.baseUrls = S.settings.baseUrls || {deepseek:'',claude:'',openai:'',gemini:''};
+  // banner：只在localStorage有games但S.games为空时显示（说明load失败了）
+  try{
+    const banner=document.getElementById('recovery-banner');
+    if(banner){
+      const hasLoaded=Object.keys(S.games||{}).length>0;
+      if(!hasLoaded){
+        const raw=localStorage.getItem(SK);
+        const hasStored=raw&&Object.keys(JSON.parse(raw).games||{}).length>0;
+        banner.style.display=hasStored?'block':'none';
+      } else {
+        banner.style.display='none';
+      }
+    }
+  }catch(e){}
+  document.querySelectorAll('.provider-btn').forEach(b=>b.classList.toggle('active',b.dataset.p===provider));
+  document.getElementById('api-key-input').value=keys[provider]||'';
+  document.getElementById('key-hint').textContent=KEY_HINTS[provider]||'';
+  const baseHints={
+    deepseek:'留空=官方地址；OpenAI兼容协议，可填到 /v1 或完整的 .../chat/completions',
+    openai:'留空=官方地址；OpenAI兼容协议，可填到 /v1 或完整的 .../chat/completions',
+    claude:'留空=官方地址；填到域名或 /v1 即可，会自动补 /v1/messages',
+    gemini:'留空=官方地址；填到域名+版本号（如 .../v1beta）即可，会自动补 /models/模型名:generateContent'
+  };
+  document.getElementById('base-url-input').value=(S.settings.baseUrls||{})[provider]||'';
+  document.getElementById('base-url-hint').textContent=baseHints[provider]||'';
+  document.getElementById('model-select').value=models[provider]||'';
+  document.getElementById('model-datalist').innerHTML=(MODELS[provider]||[]).map(m=>`<option value="${m}">`).join('');
+}
+function saveBaseUrl(){
+  const {provider}=S.settings;
+  S.settings.baseUrls = S.settings.baseUrls || {deepseek:'',claude:'',openai:'',gemini:''};
+  S.settings.baseUrls[provider]=document.getElementById('base-url-input').value.trim();
+  save();
+}
+async function exportAllSaves(){
+  const content=JSON.stringify(S, null, 2);
+  const ts=new Date().toISOString().slice(0,10);
+  const filename=`墨游_全部存档_${ts}.json`;
+  const blob=new Blob([content],{type:'application/json;charset=utf-8'});
+  if(navigator.share && navigator.canShare?.({files:[new File([blob],filename)]})){
+    try{ await navigator.share({files:[new File([blob],filename,{type:'application/json'})],title:'墨游存档备份'}); return; }
+    catch(e){ if(e.name==='AbortError') return; }
+  }
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=filename; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
+function importAllSaves(e){
+  const f=e.target.files[0]; if(!f) return;
+  e.target.value='';
+  if(!confirm('导入会覆盖当前所有存档和设置，确认继续？')) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!data.games && !data.settings) throw new Error('不是有效的墨游存档文件');
+      S={...S,...data};
+      save(); renderHistory(); renderSettings(); switchTab('history');
+      toast('全部存档已恢复');
+    }catch(err){ toast('导入失败：'+err.message); }
+  };
+  r.readAsText(f,'utf-8');
+}
+
+function emergencyRecover(){
+  try{
+    const raw=localStorage.getItem(SK);
+    if(!raw) return toast('localStorage里没有找到数据');
+    const data=JSON.parse(raw);
+    if(data.games) S.games=data.games;
+    if(data.settings) S.settings={...S.settings,...data.settings};
+    if(data.currentId!==undefined) S.currentId=data.currentId;
+    if(S.currentId && !S.games[S.currentId]) S.currentId=null;
+    if(!S.currentId){
+      const sorted=Object.values(S.games||{}).sort((a,b)=>new Date(b.lastPlayedAt)-new Date(a.lastPlayedAt));
+      if(sorted.length) S.currentId=sorted[0].id;
+    }
+    Object.values(S.games||{}).forEach(g=>{
+      (g.npcs||[]).forEach(n=>{ delete n._memoUpdating; });
+    });
+    save();
+    // 完整重新初始化所有页面
+    renderHistory();
+    renderSettings();
+    if(S.currentId && S.games[S.currentId]) renderGamePage();
+    switchTab('history');
+    toast('存档已恢复，共 '+Object.keys(S.games||{}).length+' 个故事');
+  }catch(e){ toast('恢复失败: '+e.message); console.error(e); }
+}
+
+function deleteGame(id){
+  const g=S.games[id]; if(!g) return;
+  if(!confirm(`删除「${g.name}」？此操作不可撤销。`)) return;
+  delete S.games[id]; if(S.currentId===id) S.currentId=null; save(); renderHistory();
+}
+function selectProvider(p){ S.settings.provider=p; save(); renderSettings(); }
+function saveApiKey(){ S.settings.keys[S.settings.provider]=document.getElementById('api-key-input').value.trim(); save(); }
+function saveModel(){ S.settings.models[S.settings.provider]=document.getElementById('model-select').value; save(); }
+
+// ─────────────────────────────────────────────
+//  NEW GAME WIZARD
+// ─────────────────────────────────────────────
+let wzStep=0, wzData={};
+const WZ_TITLES=['世界观设定','玩家角色','登场人物','规则'];
+let emojiIdx=0;
+
+function openWizard(){
+  wzStep=0;
+  wzData={name:'',emoji:'🎭',worldSetting:'',player:{name:'',background:'',stats:[{name:'魅力',value:60},{name:'智谋',value:60},{name:'武力',value:50},{name:'运气',value:50}],tags:[]},npcs:[],customRules:''};
+  document.getElementById('wizard-modal').style.display='flex';
+  renderWz();
+}
+function wzBgClick(e){ if(e.target===document.getElementById('wizard-modal')) closeWz(); }
+function closeWz(){ document.getElementById('wizard-modal').style.display='none'; }
+
+function renderWz(){
+  document.getElementById('wz-steps').innerHTML=WZ_TITLES.map((_,i)=>`<div class="wz-step ${i<=wzStep?'done':''}"></div>`).join('');
+  const body=document.getElementById('wz-body');
+
+  if(wzStep===0){
+    body.innerHTML=`
+      <div class="modal-title">${WZ_TITLES[0]}</div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">故事名称</label>
+          <div style="display:flex;gap:8px">
+            <input class="form-input" id="wz-name" placeholder="给这个故事起个名字" value="${esc(wzData.name)}" style="flex:1">
+            <div class="form-input" id="wz-emoji" style="width:52px;text-align:center;font-size:22px;cursor:pointer;flex-shrink:0" onclick="pickEmoji()">${wzData.emoji}</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">世界观 / 背景设定</label>
+          <textarea class="form-input form-textarea" id="wz-world" placeholder="描述故事的世界观、背景、基本规则……&#10;可以是仙侠、现代、架空、任意设定">${esc(wzData.worldSetting)}</textarea>
+          <div class="import-row" style="margin-top:6px">
+            <button class="import-btn" style="flex:1" onclick="document.getElementById('fi-world').click()">📄 导入世界观文件</button>
+          </div>
+        </div>
+        <div style="border:1px dashed var(--border);border-radius:10px;padding:12px 14px;margin-bottom:16px">
+          <div style="font-size:12px;color:var(--text2);font-family:'Noto Sans SC',sans-serif;margin-bottom:8px">从上一部/存档导入</div>
+          <div class="import-row" style="margin-top:0">
+            <button class="import-btn" style="flex:1" onclick="document.getElementById('fi-summary').click()">📋 导入存档提炼 (.md)</button>
+            <button class="import-btn" style="flex:1" onclick="document.getElementById('fi-json').click()">💾 导入完整存档 (.json)</button>
+          </div>
+          <div id="wz-import-status" class="hint-text" style="margin-top:6px"></div>
+        </div>
+        <div class="wizard-nav">
+          <div class="btn-secondary" onclick="closeWz()">取消</div>
+          <div class="btn-primary" onclick="wzNext()">下一步</div>
+        </div>
+      </div>`;
+  } else if(wzStep===1){
+    body.innerHTML=`
+      <div class="modal-title">${WZ_TITLES[1]}</div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">姓名</label>
+          <input class="form-input" id="wz-pname" placeholder="你的角色名" value="${esc(wzData.player.name)}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">背景</label>
+          <input class="form-input" id="wz-pbg" placeholder="身份、来历、简介……" value="${esc(wzData.player.background)}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">属性</label>
+          <div class="stats-builder" id="wz-stats"></div>
+          <button class="add-btn" onclick="wzAddStat()">＋ 添加属性</button>
+          <div class="hint-text">属性值 1-100，影响判定。建议保留「运气」。</div>
+        </div>
+        <div class="wizard-nav">
+          <div class="btn-secondary" onclick="wzBack()">上一步</div>
+          <div class="btn-primary" onclick="wzNext()">下一步</div>
+        </div>
+      </div>`;
+    renderWzStats();
+  } else if(wzStep===2){
+    body.innerHTML=`
+      <div class="modal-title">${WZ_TITLES[2]}</div>
+      <div class="modal-body">
+        <div class="hint-text" style="margin-bottom:12px">添加故事中的重要角色，之后也可以在 ⚙ 中补充。</div>
+        <div class="npc-builder" id="wz-npcs"></div>
+        <div class="import-row" style="margin-top:4px">
+          <button class="add-btn" style="flex:1" onclick="wzAddNpc()">＋ 手动添加</button>
+          <button class="import-btn" onclick="openNpcPaste()">粘贴导入</button>
+          <button class="import-btn" onclick="document.getElementById('fi-npc').click()">📄 文件</button>
+        </div>
+        <button class="import-btn" style="width:100%;margin-top:8px" onclick="aiEstimateWzNpcs()">✨ AI推算初始好感度</button>
+        <div id="wz-estimate-result"></div>
+        <div class="wizard-nav" style="margin-top:16px">
+          <div class="btn-secondary" onclick="wzBack()">上一步</div>
+          <div class="btn-primary" onclick="wzNext()">下一步</div>
+        </div>
+      </div>`;
+    renderWzNpcs();
+  } else if(wzStep===3){
+    body.innerHTML=`
+      <div class="modal-title">${WZ_TITLES[3]}</div>
+      <div class="modal-body">
+        <div class="hint-text" style="margin-bottom:12px">直接写清楚你想要的语气、分段方式、字数、要不要浪漫戏份……这段话优先级最高，AI会照着执行。留空则完全按世界观自由发挥。之后随时可以在 ⚙ 里改。</div>
+        <div class="form-group">
+          <textarea class="form-input form-textarea" id="wz-rules" style="min-height:180px" placeholder="例：每次回复4段以上，段落间空行；语气克制，少用感叹号；每轮必须有实质推进，不要停在原地反复描写；不要浪漫戏份……">${esc(wzData.customRules||'')}</textarea>
+        </div>
+        <div class="wizard-nav">
+          <div class="btn-secondary" onclick="wzBack()">上一步</div>
+          <div class="btn-primary" onclick="createGame()">开始故事</div>
+        </div>
+      </div>`;
+  }
+}
+
+function renderWzStats(){
+  const cont=document.getElementById('wz-stats'); if(!cont) return;
+  cont.innerHTML=wzData.player.stats.map((s,i)=>`
+    <div class="stat-row">
+      <input class="form-input stat-name-inp" placeholder="属性名" value="${esc(s.name)}" style="flex:1" oninput="wzUpdStat(${i},'name',this.value)">
+      <input class="form-input stat-val-inp" type="number" min="1" max="100" value="${s.value}" style="width:70px;text-align:center" oninput="wzUpdStat(${i},'value',+this.value)">
+      <button class="rm-btn" onclick="wzRmStat(${i})">×</button>
+    </div>`).join('');
+}
+
+function renderWzNpcs(){
+  const cont=document.getElementById('wz-npcs'); if(!cont) return;
+  cont.innerHTML=wzData.npcs.map((n,i)=>`
+    <div class="npc-item">
+      <div class="npc-item-hdr"><span class="npc-item-name" id="wz-npc-lbl-${i}">${esc(n.name)||'未命名'}</span><button class="rm-btn" onclick="wzRmNpc(${i})">×</button></div>
+      <div class="form-group"><label class="form-label">姓名</label><input class="form-input" placeholder="角色名" value="${esc(n.name)}" oninput="wzUpdNpc(${i},'name',this.value)"></div>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <div style="flex:2"><label class="form-label">描述</label><input class="form-input" placeholder="身份、性格、与主角关系……" value="${esc(n.description)}" oninput="wzUpdNpc(${i},'description',this.value)"></div>
+        <div style="flex:1"><label class="form-label">性别</label><select class="form-input" style="padding:12px 8px" onchange="wzUpdNpc(${i},'gender',this.value)"><option value="">未知</option><option value="男" ${n.gender==='男'?'selected':''}>男</option><option value="女" ${n.gender==='女'?'selected':''}>女</option><option value="其他">其他</option></select></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <div style="flex:1"><label class="form-label">初始好感 (0-40)</label><input class="form-input" type="number" min="0" max="40" value="${n.affection||0}" oninput="wzUpdNpc(${i},'affection',Math.min(40,Math.max(0,+this.value)))"></div>
+        <div style="flex:1"><label class="form-label">攻略难度 (1-5)</label><input class="form-input" type="number" min="1" max="5" value="${n.difficultyFactor||3}" oninput="wzUpdNpc(${i},'difficultyFactor',Math.min(5,Math.max(1,+this.value)))"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:0"><label class="form-label">日记风格（可选）</label><input class="form-input" placeholder="例：克制、多用比喻" value="${esc(n.diaryStyle)}" oninput="wzUpdNpc(${i},'diaryStyle',this.value)"></div>
+    </div>`).join('');
+}
+
+function wzSyncStep1(){
+  const n=document.getElementById('wz-pname'); if(n) wzData.player.name=n.value;
+  const b=document.getElementById('wz-pbg'); if(b) wzData.player.background=b.value;
+}
+function wzSyncStep3(){
+  const r=document.getElementById('wz-rules'); if(r) wzData.customRules=r.value;
+}
+
+function wzNext(){
+  if(wzStep===0){
+    const name=document.getElementById('wz-name').value.trim();
+    const world=document.getElementById('wz-world').value.trim();
+    if(!name){ toast('请填写故事名称'); return; }
+    if(!world){ toast('请填写世界观设定'); return; }
+    wzData.name=name; wzData.worldSetting=world;
+  }
+  if(wzStep===1){
+    wzSyncStep1();
+    if(!wzData.player.name.trim()){ toast('请填写角色名'); return; }
+  }
+  wzStep++; renderWz();
+}
+function wzBack(){
+  if(wzStep===1) wzSyncStep1();
+  if(wzStep===3) wzSyncStep3();
+  wzStep--; renderWz();
+}
+function pickEmoji(){ emojiIdx=(emojiIdx+1)%EMOJIS.length; wzData.emoji=EMOJIS[emojiIdx]; const e=document.getElementById('wz-emoji'); if(e) e.textContent=wzData.emoji; }
+function wzUpdStat(i,k,v){ wzData.player.stats[i][k]= k==='value'?Math.min(100,Math.max(1,+v||50)):v; }
+function wzAddStat(){ wzSyncStep1(); wzData.player.stats.push({name:'',value:50}); renderWzStats(); }
+function wzRmStat(i){ wzSyncStep1(); wzData.player.stats.splice(i,1); renderWzStats(); }
+function wzUpdNpc(i,k,v){ wzData.npcs[i][k]=v; const el=document.getElementById('wz-npc-lbl-'+i); if(el&&k==='name') el.textContent=v||'未命名'; }
+function wzAddNpc(){ wzData.npcs.push({id:uid(),name:'',description:'',diaryStyle:'',weiboStyle:'',affection:0,difficultyFactor:3,knownEvents:[],characterMemo:''}); renderWzNpcs(); }
+function wzRmNpc(i){ wzData.npcs.splice(i,1); renderWzNpcs(); }
+
+function createGame(){
+  wzSyncStep1(); wzSyncStep3();
+  const statsObj={};
+  wzData.player.stats.forEach(s=>{ if(s.name.trim()) statsObj[s.name.trim()]=Math.min(100,Math.max(1,Number(s.value)||50)); });
+  const game={
+    id:uid(), name:wzData.name, emoji:wzData.emoji,
+    createdAt:new Date().toISOString(), lastPlayedAt:new Date().toISOString(),
+    completed:false, worldSetting:wzData.worldSetting, chapter:'序章',
+    player:{name:wzData.player.name,background:wzData.player.background,stats:statsObj,tags:[],items:[]},
+    npcs:wzData.npcs, messages:[], narrativeHistory:[], fragments:[], _opts:[],
+    style:{...DEF_STYLE, customRules:wzData.customRules||''}, activePlans:[]
+  };
+  S.games[game.id]=game; S.currentId=game.id; save();
+  closeWz(); switchTab('game'); renderGamePage();
+}
+
+// ─────────────────────────────────────────────
+//  EXPORT
+// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+//  EXPORT
+// ─────────────────────────────────────────────
+let _exportData = {}; // 避免内联大字符串进HTML属性
+
+function exportGame(){
+  const g=cg(); if(!g){ toast('请先选择游戏'); return; }
+
+  // 1. 阅读记录
+  const storyLines=[`# ${g.name}`,`创建：${g.createdAt?.slice(0,10)||''}  最后游玩：${g.lastPlayedAt?.slice(0,10)||''}\n`];
+  (g.narrativeHistory||[]).forEach(b=>{
+    if(b.type==='narrative') storyLines.push(b.content+'\n');
+    else if(b.type==='action') storyLines.push(`> ${b.content}\n`);
+    else if(b.type==='check') storyLines.push(`[判定 ${b.success?'成功':'失败'}: ${b.stat}=${b.score} vs ${b.diff}]\n${b.content}\n`);
+  });
+
+  // 2. 存档提炼
+  const sl=[`# ${g.name} - 存档提炼`,`\n## 世界观\n${g.worldSetting}`,
+    `\n## 玩家\n姓名：${g.player.name}\n背景：${g.player.background||''}`];
+  if(Object.keys(g.player.stats||{}).length) sl.push(`属性：${Object.entries(g.player.stats).map(([k,v])=>`${k} ${v}`).join('、')}`);
+  if((g.player.tags||[]).length) sl.push(`状态：${g.player.tags.join('、')}`);
+  if((g.player.items||[]).length) sl.push(`道具：${g.player.items.join('、')}`);
+  if(g.player.characterMemo) sl.push(`记忆：${g.player.characterMemo}`);
+  sl.push(`\n## 角色`);
+  (g.npcs||[]).forEach(n=>{
+    sl.push(`\n### ${n.name}（好感${n.affection||0}，难度${n.difficultyFactor||3}）`);
+    if(n.description) sl.push(n.description);
+    if(n.characterMemo) sl.push(`记忆：${n.characterMemo}`);
+    if((n.knownEvents||[]).length) sl.push(`已知事件：${n.knownEvents.join('、')}`);
+  });
+  if((g.summaries||[]).length){ sl.push(`\n## 剧情摘要`); g.summaries.forEach(s=>sl.push(s.content)); }
+  if((g.activePlans||[]).length){ sl.push(`\n## 进行中的计划`); g.activePlans.forEach((p,i)=>sl.push(`${i+1}. ${p}`)); }
+  sl.push(`\n## 章节\n${g.chapter}`);
+
+  const ts=new Date().toISOString().slice(0,10);
+  const safeName=g.name.replace(/[^\w\u4e00-\u9fa5]/g,'_');
+
+  // 安全存储，避免内联进HTML
+  _exportData = {
+    story:  { content: storyLines.join('\n'),  filename: `${safeName}_记录_${ts}.txt`,    label:'📖 阅读记录',   hint:'故事全文，可当小说读' },
+    summary:{ content: sl.join('\n'),           filename: `${safeName}_存档提炼_${ts}.md`, label:'📋 存档提炼',   hint:'续作/第二部开局用' },
+    full:   { content: JSON.stringify(g,null,2),filename: `${safeName}_完整存档_${ts}.json`,label:'💾 完整存档',  hint:'备份/恢复用' },
+  };
+
+  const modal=document.createElement('div');
+  modal.className='modal-overlay';
+  modal.style.zIndex='700';
+  modal.innerHTML=`<div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">导出「${esc(g.name)}」</div>
+    <div class="modal-body" style="padding-top:8px;padding-bottom:8px">
+      ${['story','summary','full'].map(key=>`
+      <div class="export-item" id="ei-${key}">
+        <div class="export-hdr" onclick="toggleExportItem('${key}')">
+          <div>
+            <div style="font-size:14px;color:var(--text);font-family:'Noto Sans SC',sans-serif">${_exportData[key].label}</div>
+            <div style="font-size:11px;color:var(--text3);font-family:'Noto Sans SC',sans-serif;margin-top:2px">${_exportData[key].hint}</div>
+          </div>
+          <span class="export-chevron" id="ec-${key}" style="color:var(--text3);font-size:14px">▶</span>
+        </div>
+        <div class="export-body" id="eb-${key}" style="display:none">
+          <textarea class="export-preview" id="ep-${key}" readonly onclick="this.select()">${esc(_exportData[key].content.slice(0,300)+((_exportData[key].content.length>300)?'\n\n……（共'+_exportData[key].content.length+'字）':''))}</textarea>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <div class="btn-secondary" style="flex:1;font-size:13px;cursor:pointer" onclick="copyExport('${key}')">📋 复制全文</div>
+            <div class="btn-primary" style="flex:1;font-size:13px;cursor:pointer" onclick="saveExport('${key}')">⬇ 保存文件</div>
+          </div>
+        </div>
+      </div>`).join('')}
+      <div class="wizard-nav" style="margin-top:8px"><div class="btn-primary" onclick="this.closest('.modal-overlay').remove()">关闭</div></div>
+    </div>
+  </div>`;
+  modal.onclick=e=>{ if(e.target===modal) modal.remove(); };
+  document.body.appendChild(modal);
+}
+
+function toggleExportItem(key){
+  const body=document.getElementById('eb-'+key);
+  const chev=document.getElementById('ec-'+key);
+  if(!body) return;
+  const open=body.style.display==='none';
+  body.style.display=open?'block':'none';
+  if(chev) chev.textContent=open?'▼':'▶';
+}
+
+function copyExport(key){
+  const d=_exportData[key]; if(!d) return;
+  navigator.clipboard?.writeText(d.content).then(()=>toast('已复制到剪贴板'))
+    .catch(()=>{
+      // fallback
+      const ta=document.createElement('textarea');
+      ta.value=d.content; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); ta.remove();
+      toast('已复制到剪贴板');
+    });
+}
+
+async function saveExport(key){
+  const d=_exportData[key]; if(!d) return;
+  const blob=new Blob([d.content],{type:'text/plain;charset=utf-8'});
+  // iOS PWA 优先用 Web Share API（可选「存储到文件」）
+  if(navigator.share && navigator.canShare?.({files:[new File([blob],d.filename)]})){
+    try{
+      await navigator.share({ files:[new File([blob],d.filename,{type:'text/plain'})], title:d.label });
+      return;
+    }catch(e){ if(e.name==='AbortError') return; } // 用户取消
+  }
+  // 桌面/非iOS 直接下载
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=d.filename; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
+// ─────────────────────────────────────────────
+//  TOAST
+// ─────────────────────────────────────────────
+function toast(msg){
+  const e=document.querySelector('.toast'); if(e)e.remove();
+  const d=document.createElement('div'); d.className='toast'; d.textContent=msg;
+  document.body.appendChild(d); setTimeout(()=>d.remove(),2600);
+}
+
+// ─────────────────────────────────────────────
+//  INPUT EVENTS
+// ─────────────────────────────────────────────
+document.getElementById('free-input').addEventListener('input',function(){
+  this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,100)+'px';
+});
+document.getElementById('free-input').addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendFreeInput(); }
+});
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+load();
+// 如果load后games为空但localStorage有数据，自动静默恢复
+if(Object.keys(S.games||{}).length===0){
+  try{
+    const raw=localStorage.getItem(SK);
+    if(raw){
+      const data=JSON.parse(raw);
+      if(data.games && Object.keys(data.games).length>0){
+        if(data.games) S.games=data.games;
+        if(data.settings) S.settings={...S.settings,...data.settings};
+        if(data.currentId!==undefined) S.currentId=data.currentId;
+        if(S.currentId && !S.games[S.currentId]) S.currentId=null;
+        Object.values(S.games).forEach(g=>{
+          (g.npcs||[]).forEach(n=>{ delete n._memoUpdating; });
+        });
+        console.log('[moyu] auto-recovered', Object.keys(S.games).length, 'games');
+      }
+    }
+  }catch(e){ console.error('[moyu] auto-recover failed:', e); }
+}
+renderHistory();
+renderSettings();
+if(S.currentId && S.games[S.currentId]) renderGamePage();
+</script>
+</body>
+</html>
