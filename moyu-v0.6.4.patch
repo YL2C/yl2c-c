@@ -1,0 +1,845 @@
+diff --git a/README.md b/README.md
+--- a/README.md
++++ b/README.md
+@@ -5,10 +5,20 @@
+ 现在完成到第 4 步，外加番外册：
+ - **第 1 步 · 连得上、能玩**：连接配置、连接测试（自动识别接口格式）、中文报错、流式输出、停止、续写、重写多个版本、出戏、导演指令、本机存储。
+ - **第 2 步 · 能改、能退**：每一章右边的“⋯”可以修改正文（改完直接算数）、从某一段往后重写、按要求重写、回到这里；你的输入也能修改并重新生成。任何一轮有多个版本时都能左右切换；重写或回退后留下的走向在“⋯ → 分支”里，可以切换和删除。连接里填上价格后，每轮显示花费，“⋯ → 花费”看故事和本月合计，设置里可以设每月提醒线。
+-- **底部菜单**（照老版）：故事 / 游玩 / 角色 / 番外 / 设置。“游玩、角色、番外”指向最近打开的那个故事；打字时菜单自动收起。
++- **底部菜单**（照老版）：故事 / 游玩 / 角色 / 番外 / 讨论 / 设置。“游玩、角色、番外”指向最近打开的那个故事；打字时菜单自动收起。
+ - **第 3 步 · 角色卡和规则模块**：角色在底部“角色”里，卡片式列出，点开看全部、点“编辑”修改；整理过前情后，“当前状态 / 变化轨迹 / 关系档案”显示并编辑的是前情档案里的那份。世界设定和规则在右上角“⋯ → 世界设定与规则”。“让 AI 拆角色卡”会读世界设定、前情档案和最近约 3 万字的剧情，已经有卡的不重复。整理前情时，剧情里新登场、会反复出现的角色会自动建卡（标“AI 新加”，编辑保存后去掉）。角色卡按“初始设定、底色、原话锚、禁止清单、变化轨迹、当前状态、关系档案”填，可以让 AI 先从世界设定里拆一版草稿；“常驻”的每轮都发，其他角色被提到才发；在场角色的禁止清单会贴在每轮最后提醒模型。某一章“⋯ → 这不像他”会把纠正写进禁止清单并可重写。规则模块在设置里管理（可导入 markdown，每个“## 标题”一个模块），每个故事自己选启用哪些；模块可以一直发、手动开关（情境，比如成人场景）、或出现关键词时发；备注只给自己看，不发给模型。“查看发给模型的内容”按块列出每部分多少字。
+ - **第 4 步 · 自动整理前情（记忆）**：每玩够几章（默认 15，可在“⋯ → 记忆”里改，0 = 只手动），后台让模型当“存档员”整理一次：剧情摘要、不可逆的事、物品与信物、未决事项和暗线、信息差（谁知道什么）、暗处动向、反复出现的套路、角色的当前状态 / 变化轨迹 / 关系档案。整理好之后，那一章之前的原文不再整段发给模型，由这份档案代替；角色卡上的三栏以档案为准。档案挂在章节上：回退、切分支会自动用那条线当时的那一份，新分支会自己整理。存档员拿不准的、和设定冲突的单独列出，不发给模型，等你看。档案可以直接改；改了已整理过的章节，会问你要不要补一条“勘误”。整理可以换一个连接（比如便宜的模型），失败了不影响继续玩，可以重试或“重新整理最近一次”。摘要太长时，最早的一半会自动压缩成早期概要，“不可逆的事”永远不压缩。
+ - **番外**：底部“番外”，可以按形式筛选。选形式（内置 8 种通用模板，可在设置里改、加、导入 markdown）或自定义一句话；选视角角色、时间点（之后的正史不发给模型）、带几章原文、额外指定章节、知情范围（全知 / 只知道公开的事 / 视角角色所知）、篇幅。番外单独存放，不进正史、不作为前情发给正文；可以重写成多个版本、换个要求、接着写、修改。“番外通用要求”每篇都会带上，可以贴你自己的番外总纲。
++
++## 讨论
++
++底部“💬 讨论”：
++- 新讨论时选范围：某个故事（自动带上它的规则、世界设定、开场、角色卡、当前这条线的前情档案），或全局（带上全局备忘、默认规则、规则模块库、故事列表）。可以选带最近 0/3/5/10 章原文，默认不带。
++- 聊完点“✍️ 整理成修改”：模型把定下来的结论合并成最多 6 条修改，默认全选，文字可直接改；规则类每条可选写进“本故事规则”或“全局”。点“写回”后生效，可以“撤销这次写回”（只限最近一次）。
++- 角色的当前状态 / 变化轨迹 / 关系档案、剧情纠错，有前情档案时写进当前这条线最新的档案；还没整理过前情的，改写进设定。
++- “＋ 生成新故事”：根据讨论填好新故事的表单，检查后点创建。
++- **全局备忘**：讨论页顶部可直接编辑，所有故事每一轮都会带上，越短越省钱。
++
+ 
+ ## 部署到 GitHub Pages
+ 
+diff --git a/css/app.css b/css/app.css
+--- a/css/app.css
++++ b/css/app.css
+@@ -337,3 +337,22 @@
+   opacity: 0; pointer-events: none; transition: .2s; z-index: 100; max-width: 86vw; text-align: center; line-height: 1.5;
+ }
+ #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
++
++/* 讨论 */
++.disc-feed { display: flex; flex-direction: column; gap: 10px; }
++.disc-msg { max-width: 88%; padding: 10px 12px; border-radius: 14px; line-height: 1.7; font-size: 15.5px; }
++.disc-msg.me { align-self: flex-end; background: var(--accent-soft); border-bottom-right-radius: 4px; }
++.disc-msg.ai { align-self: flex-start; background: var(--card); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
++.disc-msg.err { border-color: var(--danger); }
++.disc-text { white-space: pre-wrap; word-break: break-word; }
++.disc-meta { font-size: 11.5px; color: var(--text3); margin-top: 4px; }
++.disc-note { align-self: center; font-size: 13px; color: var(--text2); background: var(--bg2); border-radius: 10px; padding: 8px 12px; white-space: pre-wrap; max-width: 92%; }
++.chg { padding: 10px 12px; }
++.chg.off { opacity: .45; }
++.chg-head { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
++.chg-head input { width: 18px; height: 18px; accent-color: var(--accent); }
++.chg-text { width: 100%; margin-top: 8px; border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 8px; font-size: 15px; line-height: 1.6; resize: none; color: var(--text); }
++.chg-old { font-size: 12.5px; color: var(--text3); text-decoration: line-through; margin-top: 6px; white-space: pre-wrap; }
++.segs { display: flex; gap: 6px; margin-top: 8px; }
++.seg { flex: 1; border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 6px; font-size: 13px; color: var(--text2); cursor: pointer; }
++.seg.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+diff --git a/js/db.js b/js/db.js
+--- a/js/db.js
++++ b/js/db.js
+@@ -113,14 +113,14 @@
+ 
+ /** 导出：默认不含 API 密钥 */
+ export async function exportAll({ includeKeys = false } = {}) {
+-  const [stories, nodes, extras, connections, defaultRules, prefs, modules, fwTemplates, fwBase] = await Promise.all([
++  const [stories, nodes, extras, connections, defaultRules, prefs, modules, fwTemplates, fwBase, globalMemo] = await Promise.all([
+     db.all('stories'), db.all('nodes'), db.all('extras'), db.all('connections'),
+     db.kvGet('defaultRules', null), db.kvGet('prefs', null),
+-    db.kvGet('modules', null), db.kvGet('fwTemplates', null), db.kvGet('fwBase', null),
++    db.kvGet('modules', null), db.kvGet('fwTemplates', null), db.kvGet('fwBase', null), db.kvGet('globalMemo', null),
+   ]);
+   return {
+     app: 'moyu', schema: SCHEMA, exportedAt: Date.now(),
+-    stories, nodes, extras, modules, fwTemplates, fwBase,
++    stories, nodes, extras, modules, fwTemplates, fwBase, globalMemo,
+     connections: connections.map((c) => (includeKeys ? c : { ...c, apiKey: '' })),
+     defaultRules, prefs,
+   };
+@@ -135,7 +135,7 @@
+ 
+ /** 导入：同 id 的故事会被覆盖；连接只补充不存在的（不覆盖本机已有密钥） */
+ export async function importData(data) {
+-  if (!data || data.app !== 'moyu') throw new Error('这不是墨游的备份文件');
++  if (!data || (data.app !== 'moyu' && data.app !== 'yl2c')) throw new Error('这不是墨游的备份文件');
+   if ((data.schema || 1) > SCHEMA) throw new Error('这个备份来自更新版本的墨游，请先更新');
+   const stories = Array.isArray(data.stories) ? data.stories.filter(Boolean) : [];
+   const nodes = Array.isArray(data.nodes) ? data.nodes.filter(Boolean) : [];
+@@ -151,6 +151,7 @@
+   if (Array.isArray(data.modules) && !(await db.kvGet('modules', null))) await db.kvSet('modules', data.modules);
+   if (Array.isArray(data.fwTemplates) && !(await db.kvGet('fwTemplates', null))) await db.kvSet('fwTemplates', data.fwTemplates);
+   if (data.fwBase && !(await db.kvGet('fwBase', null))) await db.kvSet('fwBase', data.fwBase);
++  if (data.globalMemo && !(await db.kvGet('globalMemo', null))) await db.kvSet('globalMemo', data.globalMemo);
+   let addedConn = 0;
+   if (Array.isArray(data.connections)) {
+     const existing = new Set((await db.all('connections')).map((c) => c.id));
+diff --git a/js/discuss.js b/js/discuss.js
+new file mode 100644
+--- /dev/null
++++ b/js/discuss.js
+@@ -0,0 +1,238 @@
++// 墨游 · 讨论：读某个故事（或全局）的设定和记忆来聊天，聊完整理成修改清单，确认后写回
++
++import { db } from './db.js';
++import { uid } from './util.js';
++import { getGlobalMemo, setGlobalMemo, getDefaultRules, getModules } from './state.js';
++import { cardText, applyCardState, latestCheckpoint, memoryText } from './prompt.js';
++import { chaptersOf } from './fanwai.js';
++
++// ───── 存储：讨论列表 + 每个讨论单独一条 ─────
++export async function listDiscussions() {
++  const list = (await db.kvGet('disc.index', null)) || [];
++  return list.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
++}
++export async function getDiscussion(id) { return db.kvGet('disc.' + id, null); }
++export async function saveDiscussion(d) {
++  d.updatedAt = Date.now();
++  await db.kvSet('disc.' + d.id, d);
++  const list = (await db.kvGet('disc.index', null)) || [];
++  const meta = { id: d.id, title: d.title, storyId: d.storyId || '', updatedAt: d.updatedAt, count: d.messages.length };
++  const i = list.findIndex((x) => x.id === d.id);
++  if (i >= 0) list[i] = meta; else list.push(meta);
++  await db.kvSet('disc.index', list);
++}
++export async function deleteDiscussion(id) {
++  await db.del('kv', 'disc.' + id);
++  const list = ((await db.kvGet('disc.index', null)) || []).filter((x) => x.id !== id);
++  await db.kvSet('disc.index', list);
++}
++export function newDiscussion(storyId, title) {
++  return { id: uid(), storyId: storyId || '', title, messages: [], chapters: 0, connId: null, createdAt: Date.now(), updatedAt: Date.now() };
++}
++
++// ───── 读故事：当前这条线 ─────
++export async function loadStoryState(storyId) {
++  const story = await db.get('stories', storyId);
++  if (!story) return null;
++  const nodes = new Map((await db.byStory(storyId)).map((n) => [n.id, n]));
++  const path = [];
++  let cur = story.headId ? nodes.get(story.headId) : null;
++  const seen = new Set();
++  while (cur && !seen.has(cur.id)) { seen.add(cur.id); path.unshift(cur); cur = cur.parentId ? nodes.get(cur.parentId) : null; }
++  return { story, nodes, path, cp: latestCheckpoint(path) };
++}
++
++// ───── 发给模型的资料 ─────
++const ROLE = `你是用户的写作搭档。用户在玩一部（或几部）AI 文字互动小说，现在跳出剧情，和你讨论设定、人物、剧情走向，或者纠正模型写歪的地方。
++- 只讨论，不要写正文章节，不要替用户推进剧情。
++- 说话直接、具体，指出设定之间的矛盾或模糊处；用户的决定以用户为准。
++- 下面的资料是这部故事目前的设定和前情档案，档案里的是已经发生的事实。`;
++
++export async function buildDiscussContext(d) {
++  const parts = [];
++  const add = (label, text) => { if (text?.trim()) parts.push({ label, text: text.trim() }); };
++  const memo = await getGlobalMemo();
++  if (d.storyId) {
++    const s = await loadStoryState(d.storyId);
++    if (!s) throw new Error('这个讨论关联的故事已经不在了');
++    const { story, path, cp } = s;
++    add('开头', ROLE + `\n\n【当前讨论的故事：${story.title || '未命名故事'}】`);
++    add('全局备忘', memo ? '【全局备忘（所有故事通用）】\n' + memo : '');
++    add('本故事规则', story.rules ? '【本故事规则】\n' + story.rules : '');
++    add('世界与角色设定', story.world ? '【世界与角色设定】\n' + story.world : '');
++    add('开场', story.opening ? '【开场】\n' + story.opening : '');
++    for (const c of (story.cards || []).filter((x) => x.name?.trim())) add('角色卡 · ' + c.name, cardText(applyCardState(c, cp?.mem)));
++    if (cp) {
++      add('前情档案', memoryText(cp.mem));
++      if (cp.mem.unsure?.length) add('待确认', '〔存档员拿不准的〕\n' + cp.mem.unsure.map((x) => '- ' + x).join('\n'));
++    }
++    const chs = chaptersOf(path);
++    add('进度', `【进度】当前这条线一共 ${chs.length} 章${cp ? `，前情档案整理到第 ${cp.mem.upTo} 章` : '，还没有整理过前情档案'}。`);
++    const n = Math.min(d.chapters || 0, chs.length);
++    if (n) add(`最近 ${n} 章原文`, `【最近 ${n} 章原文】\n` + chs.slice(-n).map((c) => `〔第${c.no}章${c.title ? ' · ' + c.title : ''}〕\n${c.said ? '（主角：' + c.said.trim() + '）\n' : ''}${c.text}`).join('\n\n'));
++  } else {
++    add('开头', ROLE.replace('下面的资料是这部故事目前的设定和前情档案，档案里的是已经发生的事实。', '这次是全局讨论：聊的是所有故事通用的写法、规则和偏好。'));
++    add('全局备忘', '【全局备忘（所有故事每轮都会带上）】\n' + (memo || '（目前是空的）'));
++    add('默认规则', '【默认规则（新故事会复制一份）】\n' + (await getDefaultRules()));
++    const mods = await getModules();
++    if (mods.length) add('规则模块库', '【规则模块库（各故事自己选择启用）】\n' + mods.map((m) => `〔${m.name}〕\n${(m.text || '').trim()}`).join('\n\n'));
++    const stories = await db.all('stories');
++    if (stories.length) add('故事列表', '【用户现有的故事】\n' + stories.map((s) => `- ${s.title || '未命名'}：${(s.world || '').replace(/\s+/g, ' ').slice(0, 80)}`).join('\n'));
++  }
++  const system = parts.map((p) => p.text).join('\n\n');
++  return { system, parts: parts.map((p) => ({ label: p.label, chars: p.text.length, text: p.text })) };
++}
++
++export function chatMessages(d) {
++  const ms = d.messages.filter((m) => (m.role === 'user' || m.role === 'assistant') && m.content?.trim()).map((m) => ({ role: m.role, content: m.content }));
++  while (ms.length && ms[0].role !== 'user') ms.shift();
++  return ms;
++}
++
++// ───── 整理成修改 ─────
++const CARD_FIELDS = { initial: '初始设定', base: '底色', voice: '原话锚', forbid: '禁止清单', now: '当前状态', arc: '变化轨迹', relation: '关系档案' };
++const MEM_FIELDS = { corrections: '勘误', irreversible: '不可逆的事', threads: '未决事项与暗线', knowledge: '信息差', items: '物品与信物', offscreen: '暗处动向' };
++export const TARGET_LABEL = { world: '世界设定', opening: '开场', rules: '规则', card: '角色卡', newcard: '新角色卡', memory: '前情档案', newstory: '新故事' };
++
++export function changesPrompt(d) {
++  const story = !!d.storyId;
++  const targets = story ? `可用的 target：
++- "rules"：写作规则、文风要求、"以后要/不要怎样"。text 写成一两条可以直接放进规则的话。
++- "world"：世界观、背景、人物关系等设定的补充。op 为 "append"（追加）或 "replace"（把 old 原文换成 text；old 必须一字不差地出自现有设定）。
++- "opening"：开场，op 只能 "replace"，text 是完整新开场。
++- "card"：修改已有角色卡，name 写角色名，field 取 ${Object.keys(CARD_FIELDS).join(' / ')}（${Object.values(CARD_FIELDS).join('、')}），追加 text。
++- "newcard"：新角色，name 写名字，text 写初始设定。
++- "memory"：纠正或补充已经发生的剧情事实，field 取 ${Object.keys(MEM_FIELDS).join(' / ')}（${Object.values(MEM_FIELDS).join('、')}），纠错一律用 corrections。` : `可用的 target：
++- "rules"：所有故事通用的写作规则、偏好。text 写成一两条可以直接放进规则的话。
++- "newstory"：讨论里聊出了一个新故事，title 写故事名，text 写世界与角色设定，opening 写开场（可空）。`;
++  return `根据上面的讨论，把用户确定下来的结论整理成要写回的修改。
++${targets}
++
++要求：
++- 只收用户明确同意或提出的结论；还在犹豫、被否定的不要收。
++- 合并同类，最多 6 条，越少越好。每条 text 简洁，能直接写进去，不要写"根据讨论"之类的话。
++- 没有可写的就输出空数组。
++- 只输出一个 JSON 对象，不要任何说明，也不要代码块标记：
++{"changes":[{"target":"...","op":"append","name":"","field":"","old":"","text":"...","title":"","opening":"","why":"一句话说明"}]}`;
++}
++
++export function parseChanges(raw, isStory = true) {
++  const t = String(raw || '').replace(/```(?:json)?/g, '');
++  const a = t.indexOf('{');
++  const b = t.lastIndexOf('}');
++  if (a < 0 || b <= a) throw new Error('模型没有按格式返回，可以再试一次');
++  const j = JSON.parse(t.slice(a, b + 1));
++  const arr = Array.isArray(j.changes) ? j.changes : [];
++  return arr.filter((c) => c && TARGET_LABEL[c.target] && (String(c.text || '').trim() || c.target === 'newstory')).slice(0, 6).map((c) => ({
++    id: uid(), target: c.target, op: c.op === 'replace' ? 'replace' : 'append',
++    name: String(c.name || '').trim(), field: String(c.field || '').trim(), old: String(c.old || ''),
++    text: String(c.text || '').trim(), title: String(c.title || '').trim(), opening: String(c.opening || '').trim(),
++    why: String(c.why || '').trim(),
++    dest: c.target === 'rules' ? (isStory ? 'story' : 'global') : '', // 规则写到哪：story / global，界面上可切换
++    on: true,
++  }));
++}
++
++/** 一条修改的说明文字（给确认界面用），会根据故事实际情况调整去向 */
++export function describeChange(c, s) {
++  const cp = s?.cp;
++  if (c.target === 'rules') return c.dest === 'global' ? '规则 → 全局备忘（所有故事）' : '规则 → 本故事规则';
++  if (c.target === 'world') return c.op === 'replace' && c.old && (s?.story.world || '').includes(c.old) ? '世界设定 · 改一处' : '世界设定 · 追加';
++  if (c.target === 'opening') return '开场 · 替换';
++  if (c.target === 'card') {
++    const card = (s?.story.cards || []).find((x) => x.name === c.name);
++    if (!card) return `新角色卡 · ${c.name}`;
++    return `角色卡 · ${c.name} · ${CARD_FIELDS[c.field] || '初始设定'}`;
++  }
++  if (c.target === 'newcard') return `新角色卡 · ${c.name || '未命名'}`;
++  if (c.target === 'memory') return cp ? `前情档案 · ${MEM_FIELDS[c.field] || '勘误'}` : '前情档案（还没整理过）→ 改写进世界设定';
++  if (c.target === 'newstory') return `新故事 · ${c.title || '未命名'}`;
++  return c.target;
++}
++
++const appendText = (old, add) => (String(old || '').trim() ? String(old).trimEnd() + '\n' + add : add);
++
++/**
++ * 应用勾选的修改。返回 { done: [说明], newStory: prefill|null }。
++ * 写之前存一份撤销快照。
++ */
++export async function applyChanges(d, changes) {
++  const picked = changes.filter((c) => c.on);
++  const done = [];
++  let newStory = null;
++  const s = d.storyId ? await loadStoryState(d.storyId) : null;
++  const memo0 = await getGlobalMemo();
++  let memo = memo0;
++  const undo = { at: Date.now(), discId: d.id, globalMemo: memo0, story: s ? JSON.parse(JSON.stringify(s.story)) : null, node: s?.cp ? JSON.parse(JSON.stringify(s.cp.node)) : null };
++  let storyDirty = false;
++  let nodeDirty = false;
++
++  for (const c of picked) {
++    const label = describeChange(c, s);
++    if (c.target === 'newstory') { newStory = { title: c.title, world: c.text, opening: c.opening }; done.push(label); continue; }
++    if (c.target === 'rules' && (c.dest === 'global' || !s)) { memo = appendText(memo, c.text); done.push('规则 → 全局备忘'); continue; }
++    if (!s) continue;
++    const story = s.story;
++    story.cards = story.cards || [];
++    if (c.target === 'rules') { story.rules = appendText(story.rules, c.text); storyDirty = true; }
++    else if (c.target === 'world') {
++      if (c.op === 'replace' && c.old && (story.world || '').includes(c.old)) story.world = story.world.replace(c.old, c.text);
++      else story.world = appendText(story.world, c.text);
++      storyDirty = true;
++    } else if (c.target === 'opening') { story.opening = c.text; storyDirty = true; }
++    else if (c.target === 'card' || c.target === 'newcard') {
++      let card = story.cards.find((x) => x.name === c.name);
++      if (!card) {
++        card = { id: uid(), name: c.name || '未命名', aliases: '', core: false, initial: c.text, base: '', voice: '', forbid: '', arc: '', now: '', relation: '' };
++        story.cards.push(card);
++      } else {
++        const f = CARD_FIELDS[c.field] ? c.field : 'initial';
++        // 当前状态 / 变化轨迹 / 关系档案：有前情档案时以档案为准，写进档案
++        if (['now', 'arc', 'relation'].includes(f) && s.cp) {
++          const mem = s.cp.mem;
++          mem.cards = mem.cards || {};
++          const cur = applyCardState(card, mem);
++          mem.cards[card.name] = { ...(mem.cards[card.name] || {}), [f]: appendText(cur[f], c.text) };
++          nodeDirty = true;
++        } else card[f] = appendText(card[f], c.text);
++      }
++      storyDirty = true;
++    } else if (c.target === 'memory') {
++      if (s.cp) {
++        const f = MEM_FIELDS[c.field] ? c.field : 'corrections';
++        s.cp.mem[f] = [...(s.cp.mem[f] || []), c.text];
++        nodeDirty = true;
++      } else { story.world = appendText(story.world, '【补充】' + c.text); storyDirty = true; }
++    }
++    done.push(label);
++  }
++  await db.kvSet('disc.undo', undo);
++  if (memo !== memo0) await setGlobalMemo(memo);
++  if (storyDirty) { s.story.updatedAt = Date.now(); await db.put('stories', s.story); }
++  if (nodeDirty) { s.cp.node.checkpoint = s.cp.mem; await db.put('nodes', s.cp.node); }
++  return { done, newStory };
++}
++
++export async function getUndo() { return db.kvGet('disc.undo', null); }
++export async function undoLast() {
++  const u = await getUndo();
++  if (!u) return false;
++  await setGlobalMemo(u.globalMemo || '');
++  if (u.story) await db.put('stories', u.story);
++  if (u.node) await db.put('nodes', u.node);
++  await db.del('kv', 'disc.undo');
++  return true;
++}
++
++// ───── 新故事 ─────
++export const NEWSTORY_PROMPT = `根据上面的讨论，整理出一个新故事的开局资料。只输出一个 JSON 对象，不要任何说明，也不要代码块标记：
++{"title":"故事名","world":"世界与角色设定：世界观、主角是谁、登场角色和人设、开局处境，写具体","opening":"开场（可以空）","rulesExtra":"讨论里定下的这个故事专属写法要求（可以空）"}`;
++
++export function parseNewStory(raw) {
++  const t = String(raw || '').replace(/```(?:json)?/g, '');
++  const a = t.indexOf('{');
++  const b = t.lastIndexOf('}');
++  if (a < 0 || b <= a) throw new Error('模型没有按格式返回，可以再试一次');
++  const j = JSON.parse(t.slice(a, b + 1));
++  return { title: String(j.title || '').trim(), world: String(j.world || '').trim(), opening: String(j.opening || '').trim(), rulesExtra: String(j.rulesExtra || '').trim() };
++}
+diff --git a/js/main.js b/js/main.js
+--- a/js/main.js
++++ b/js/main.js
+@@ -9,6 +9,7 @@
+ import * as extrasPage from './views/extras.js';
+ import * as memoryPage from './views/memory.js';
+ import * as charsPage from './views/chars.js';
++import * as discussPage from './views/discuss.js';
+ import { getCurrentStory, setCurrentStory } from './state.js';
+ 
+ const root = document.getElementById('app');
+@@ -24,6 +25,7 @@
+   let mod = library;
+   const params = {};
+   if (name === 'play' && arg) { mod = play; params.id = decodeURIComponent(arg); }
++  else if (name === 'discuss') { mod = discussPage; params.id = arg ? decodeURIComponent(arg) : ''; }
+   else if (name === 'settings') { mod = settings; params.section = arg || ''; }
+   else if (name === 'memory' && arg) { mod = memoryPage; params.id = decodeURIComponent(arg); }
+   else if (name === 'chars' && arg) { mod = charsPage; params.id = decodeURIComponent(arg); }
+@@ -47,9 +49,10 @@
+   { key: 'play', icon: '📖', label: '游玩', story: true, to: (id) => 'play/' + encodeURIComponent(id) },
+   { key: 'chars', icon: '👤', label: '角色', story: true, to: (id) => 'chars/' + encodeURIComponent(id) },
+   { key: 'extra', icon: '🎴', label: '番外', story: true, to: (id) => 'extra/' + encodeURIComponent(id) },
++  { key: 'discuss', icon: '💬', label: '讨论', to: () => 'discuss' },
+   { key: 'settings', icon: '⚙️', label: '设置', to: () => 'settings' },
+ ];
+-const TAB_OF = { '': 'home', play: 'play', memory: 'play', story: 'play', chars: 'chars', extra: 'extra', settings: 'settings' };
++const TAB_OF = { '': 'home', play: 'play', memory: 'play', story: 'play', chars: 'chars', extra: 'extra', discuss: 'discuss', settings: 'settings' };
+ function tabBar(routeName) {
+   const active = TAB_OF[routeName || ''] || '';
+   const cur = getCurrentStory();
+diff --git a/js/prompt.js b/js/prompt.js
+--- a/js/prompt.js
++++ b/js/prompt.js
+@@ -186,13 +186,14 @@
+  * opts.modules：全局规则模块库
+  * 返回 { system, messages, info }，info.parts 是各部分的明细（给查看器用）
+  */
+-export function buildContext(story, path, { budgetChars = 60000, keepRawLast = 2, modules = [], extra = '' } = {}) {
++export function buildContext(story, path, { budgetChars = 60000, keepRawLast = 2, modules = [], extra = '', globalMemo = '' } = {}) {
+   const { sentCards, present, sentModules } = selectExtras(story, path, modules, extra);
+   const cp = latestCheckpoint(path);
+   const parts = [];
+   const add = (label, text, kind) => { if (text?.trim()) parts.push({ label, text: text.trim(), kind }); };
+   add('开头', '你正在主持一场文字互动小说。', 'base');
+   add('规则（这个故事）', story.rules?.trim() ? '【规则】\n' + story.rules.trim() : '', 'rules');
++  add('全局备忘', globalMemo?.trim() ? '【全局备忘（所有故事通用）】\n' + globalMemo.trim() : '', 'rules');
+   for (const m of sentModules) add(`规则模块 · ${m.name}${m.mode === 'manual' ? '（情境）' : m.mode === 'keyword' ? '（关键词）' : ''}`, `【规则模块·${m.name}】\n${m.text.trim()}`, 'module');
+   add('世界与角色设定', story.world?.trim() ? '【世界与角色设定】\n' + story.world.trim() : '', 'world');
+   const coreFirst = [...sentCards].sort((a, b) => (b.core ? 1 : 0) - (a.core ? 1 : 0));
+diff --git a/js/state.js b/js/state.js
+--- a/js/state.js
++++ b/js/state.js
+@@ -107,3 +107,7 @@
+ export function modulesToMarkdown(list) {
+   return list.map((m) => `## ${m.name}\n${m.text.trim()}\n`).join('\n');
+ }
++
++// ───── 全局备忘：所有故事每轮都带上（讨论页里写入） ─────
++export async function getGlobalMemo() { return (await db.kvGet('globalMemo', '')) || ''; }
++export async function setGlobalMemo(text) { return db.kvSet('globalMemo', String(text || '')); }
+diff --git a/js/util.js b/js/util.js
+--- a/js/util.js
++++ b/js/util.js
+@@ -1,6 +1,6 @@
+ // 墨游 · 小工具
+ 
+-export const APP_VERSION = '0.6.3';
++export const APP_VERSION = '0.6.4';
+ 
+ export function uid() {
+   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+diff --git a/js/views/discuss.js b/js/views/discuss.js
+new file mode 100644
+--- /dev/null
++++ b/js/views/discuss.js
+@@ -0,0 +1,354 @@
++// 墨游 · 讨论页：列表 + 单个讨论
++
++import { db } from '../db.js';
++import { el, toast, sheet, menu, promptText, autoGrow, ago } from '../util.js';
++import { go, getConnections, resolveConnection, connLabel, getGlobalMemo, setGlobalMemo } from '../state.js';
++import { streamWithRetry, ApiError } from '../api.js';
++import { normalizeUsage, computeCost, fmtMoney, recordUsage } from '../cost.js';
++import { openStoryEditor } from './story-edit.js';
++import {
++  listDiscussions, getDiscussion, saveDiscussion, deleteDiscussion, newDiscussion,
++  buildDiscussContext, chatMessages, changesPrompt, parseChanges, describeChange, applyChanges,
++  loadStoryState, getUndo, undoLast, NEWSTORY_PROMPT, parseNewStory,
++} from '../discuss.js';
++
++export async function render(root, { id }) {
++  if (id) return renderChat(root, id);
++  return renderList(root);
++}
++
++// ───────────── 列表 ─────────────
++async function renderList(root) {
++  const [list, stories, memo] = await Promise.all([listDiscussions(), db.all('stories'), getGlobalMemo()]);
++  const titleOf = new Map(stories.map((s) => [s.id, s.title || '未命名故事']));
++  const wrap = el('div', { class: 'wrap' });
++
++  const start = async () => {
++    const items = [{ key: '', label: '🌐 全局', hint: '所有故事通用的写法、规则、偏好；也能聊出新故事' }];
++    stories.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)).forEach((s) => items.push({ key: s.id, label: '📖 ' + (s.title || '未命名故事'), hint: '读这个故事的设定、角色卡和前情档案' }));
++    const k = await menu('讨论什么？', items);
++    if (k === null) return;
++    const d = newDiscussion(k, k ? titleOf.get(k) : '全局');
++    await saveDiscussion(d);
++    go('discuss/' + encodeURIComponent(d.id));
++  };
++
++  wrap.append(
++    el('button', { class: 'btn primary block', style: { margin: '4px 0 12px' }, onclick: start }, '＋ 新讨论'),
++    el('div', { class: 'card', style: { cursor: 'pointer' }, onclick: async () => {
++      const v = await promptText({ title: '全局备忘', value: memo, hint: '所有故事每一轮都会带上这里的内容，越短越省钱。讨论里“整理成修改”选了“全局”的规则会追加到这里。', okText: '保存' });
++      if (v === null) return;
++      await setGlobalMemo(v.trim());
++      toast('已保存');
++      go('discuss');
++    } },
++      el('div', { style: { fontWeight: '600' } }, '🌐 全局备忘'),
++      el('div', { class: 'hint', style: { marginTop: '4px' }, text: memo ? `${memo.length} 字 · 每个故事每轮都会带上 · 点开修改` : '空的。所有故事每一轮都会带上这里的内容。' })),
++  );
++
++  if (!list.length) wrap.append(el('div', { class: 'empty' }, '还没有讨论。', el('br'), '可以选一个故事，聊人设、纠正剧情，聊完一键写回。'));
++  for (const x of list) {
++    const scope = x.storyId ? (titleOf.get(x.storyId) || '（故事已删除）') : '全局';
++    wrap.append(el('div', { class: 'card story-card', onclick: () => go('discuss/' + encodeURIComponent(x.id)) },
++      el('div', { class: 't' }, el('span', { text: x.title || scope }),
++        el('button', { class: 'icon-btn', 'aria-label': '更多', onclick: async (e) => {
++          e.stopPropagation();
++          const k = await menu(x.title || scope, [{ key: 'rename', label: '重命名' }, { key: 'del', label: '删除', danger: true }]);
++          if (k === 'rename') {
++            const d = await getDiscussion(x.id);
++            const v = await promptText({ title: '重命名', value: d.title, multiline: false });
++            if (v?.trim()) { d.title = v.trim(); await saveDiscussion(d); go('discuss'); }
++          } else if (k === 'del' && confirm('删除这个讨论？已经写回的修改不受影响。')) { await deleteDiscussion(x.id); go('discuss'); }
++        } }, '⋯')),
++      el('div', { class: 'm', text: (x.storyId ? '📖 ' : '🌐 ') + scope + ` · ${x.count || 0} 条` }),
++      el('div', { class: 'd', text: ago(x.updatedAt) })));
++  }
++
++  root.append(el('div', { class: 'view' },
++    el('div', { class: 'topbar' }, el('div', { class: 'title', style: { paddingLeft: '6px', minHeight: '36px', display: 'flex', alignItems: 'center' } }, '讨论')),
++    el('div', { class: 'scroll' }, wrap)));
++}
++
++// ───────────── 单个讨论 ─────────────
++async function renderChat(root, id) {
++  const d = await getDiscussion(id);
++  if (!d) { toast('找不到这个讨论'); go('discuss'); return; }
++  const storyTitle = d.storyId ? ((await db.get('stories', d.storyId))?.title || '（故事已删除）') : '全局';
++  let conn = null;
++  const pickConn = async () => {
++    const list = await getConnections();
++    conn = (d.connId && list.find((c) => c.id === d.connId)) || (d.storyId ? await resolveConnection(await db.get('stories', d.storyId)) : await resolveConnection(null));
++  };
++  await pickConn();
++  let ctrl = null;
++  let destroyed = false;
++
++  const titleEl = el('div', { class: 'title' });
++  const chip = el('button', { class: 'model-chip', onclick: () => chooseConn() });
++  const feed = el('div', { class: 'feed disc-feed' });
++  const scroller = el('div', { class: 'scroll' }, feed);
++  const ta = el('textarea', { rows: 1, placeholder: d.storyId ? '比如：程岘最近太软了，他不会主动道歉……' : '比如：以后所有故事男主都不要动不动红眼眶' });
++  const sendBtn = el('button', { class: 'send', onclick: () => (ctrl ? ctrl.abort() : onSend()) }, '发送');
++  const chipChanges = el('button', { class: 'chip', onclick: () => makeChanges() }, '✍️ 整理成修改');
++  const chipNew = el('button', { class: 'chip', onclick: () => makeNewStory() }, '＋ 生成新故事');
++  const chipCh = el('button', { class: 'chip', onclick: () => chooseChapters() });
++  const composer = el('div', { class: 'composer' },
++    el('div', { class: 'bar' }, chipChanges, d.storyId ? chipCh : null, chipNew),
++    el('div', { class: 'inrow' }, ta, sendBtn));
++  autoGrow(ta);
++  ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); onSend(); } });
++
++  root.append(el('div', { class: 'view' },
++    el('div', { class: 'topbar' },
++      el('button', { class: 'icon-btn', 'aria-label': '返回', onclick: () => go('discuss') }, '‹'),
++      titleEl, chip,
++      el('button', { class: 'icon-btn', 'aria-label': '更多', onclick: () => moreMenu() }, '⋯')),
++    scroller, composer));
++
++  async function header() {
++    let chars = 0;
++    try { chars = (await buildDiscussContext(d)).system.length; } catch {}
++    titleEl.replaceChildren(d.title || storyTitle, el('div', { class: 'sub', text: `${d.storyId ? '📖 ' + storyTitle : '🌐 全局'} · 资料约 ${chars} 字` }));
++    chip.textContent = conn ? connLabel(conn) : '未连接';
++    chip.classList.toggle('warn', !conn);
++    chipCh.textContent = d.chapters ? `带原文 ${d.chapters} 章` : '不带原文';
++    chipCh.classList.toggle('on', !!d.chapters);
++  }
++
++  function bubble(m) {
++    if (m.role === 'note') {
++      return el('div', { class: 'disc-note' }, el('div', { text: m.content }),
++        m.undo ? el('button', { class: 'btn small ghost', style: { marginTop: '6px' }, onclick: async () => {
++          const u = await getUndo();
++          if (!u || u.at !== m.undo) { toast('只能撤销最近一次写回'); return; }
++          if (!confirm('撤销这次写回？设定、角色卡、前情档案和全局备忘会回到写回之前。')) return;
++          await undoLast();
++          m.content += '\n（已撤销）';
++          delete m.undo;
++          await saveDiscussion(d);
++          draw();
++          toast('已撤销');
++        } }, '撤销这次写回') : null);
++    }
++    const body = el('div', { class: 'disc-text', text: m.content || (m.streaming ? '…' : '') });
++    const meta = [m.cost ? fmtMoney(m.cost) : '', m.error || ''].filter(Boolean).join(' · ');
++    return el('div', { class: 'disc-msg ' + (m.role === 'user' ? 'me' : 'ai') + (m.error ? ' err' : '') }, body, meta ? el('div', { class: 'disc-meta', text: meta }) : null);
++  }
++
++  function draw(stick = true) {
++    if (!d.messages.length) {
++      feed.replaceChildren(el('div', { class: 'empty' },
++        d.storyId ? `会带上「${storyTitle}」的设定、角色卡和前情档案。` : '会带上全局备忘、默认规则和规则模块库。',
++        el('br'), '聊完点下面的“整理成修改”，确认后写回。'));
++      return;
++    }
++    feed.replaceChildren(...d.messages.map(bubble));
++    if (stick) scroller.scrollTop = scroller.scrollHeight;
++  }
++
++  async function callModel(system, messages, maxTokens, onText) {
++    if (!conn) { toast('先在设置里添加一个连接'); throw new Error('no conn'); }
++    ctrl = new AbortController();
++    sendBtn.textContent = '停止';
++    sendBtn.classList.add('stop');
++    try {
++      const r = await streamWithRetry(conn, { system, messages, maxTokens, signal: ctrl.signal, onText: (_, full) => onText && onText(full) });
++      const inChars = system.length + messages.reduce((a, m) => a + m.content.length, 0);
++      const u = normalizeUsage(r.usage, { inChars, outChars: r.text.length });
++      return { text: r.text, cost: computeCost(u, conn), usage: u };
++    } finally {
++      ctrl = null;
++      sendBtn.textContent = '发送';
++      sendBtn.classList.remove('stop');
++    }
++  }
++
++  async function onSend() {
++    if (ctrl) return;
++    const text = ta.value.trim();
++    if (!text) return;
++    if (!conn) { toast('先在设置里添加一个连接'); return; }
++    ta.value = '';
++    ta.dispatchEvent(new Event('input'));
++    d.messages.push({ role: 'user', content: text });
++    if (d.messages.filter((m) => m.role === 'user').length === 1 && (!d.title || d.title === storyTitle)) d.title = text.slice(0, 18);
++    const a = { role: 'assistant', content: '', streaming: true };
++    d.messages.push(a);
++    draw();
++    await saveDiscussion(d);
++    let last = 0;
++    try {
++      const { system } = await buildDiscussContext(d);
++      const msgs = chatMessages({ messages: d.messages.slice(0, -1) });
++      const r = await callModel(system, msgs, Number(conn.maxTokens) || 8000, (full) => {
++        a.content = full;
++        const node = feed.lastChild?.querySelector('.disc-text');
++        if (node) node.textContent = full;
++        if (scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 120) scroller.scrollTop = scroller.scrollHeight;
++        if (Date.now() - last > 1500) { last = Date.now(); saveDiscussion(d).catch(() => {}); }
++      });
++      a.content = r.text;
++      a.cost = r.cost;
++      recordUsage({ kind: '讨论', storyId: d.storyId, model: conn.model, usage: r.usage, cost: r.cost });
++    } catch (e) {
++      if (e?.message !== 'no conn') {
++        a.content = e?.partial || a.content || '';
++        a.error = e instanceof ApiError && e.kind === 'aborted' ? '已停止' : '出错：' + (e?.message || e);
++        if (!a.content.trim()) { d.messages.pop(); d.messages.pop(); ta.value = text; ta.dispatchEvent(new Event('input')); toast(a.error, 4000); }
++      }
++    }
++    delete a.streaming;
++    await saveDiscussion(d);
++    if (!destroyed) draw();
++  }
++
++  async function makeChanges() {
++    if (ctrl) return;
++    if (!d.messages.some((m) => m.role === 'assistant' && m.content?.trim())) { toast('先聊几句再整理'); return; }
++    const s = sheet({ title: '整理成修改' });
++    const status = el('div', { class: 'hint', text: '正在整理…（只调用一次，量不大）' });
++    s.body.append(status);
++    s.foot.append(el('button', { class: 'btn ghost', onclick: () => { ctrl?.abort(); s.close(); } }, '取消'));
++    let changes;
++    let state;
++    try {
++      const { system } = await buildDiscussContext(d);
++      const msgs = chatMessages(d);
++      msgs.push({ role: 'user', content: changesPrompt(d) });
++      if (msgs.length > 1 && msgs[msgs.length - 2].role === 'user') msgs.splice(msgs.length - 1, 0, { role: 'assistant', content: '（继续）' });
++      const r = await callModel(system, msgs, 4000);
++      recordUsage({ kind: '整理修改', storyId: d.storyId, model: conn.model, usage: r.usage, cost: r.cost });
++      changes = parseChanges(r.text, !!d.storyId);
++      state = d.storyId ? await loadStoryState(d.storyId) : null;
++      status.textContent = changes.length ? `${changes.length} 条修改，默认全选。不要的取消勾选，文字可以直接改。${r.cost ? '（这次整理 ' + fmtMoney(r.cost) + '）' : ''}` : '讨论里没有找到可以写回的结论。';
++    } catch (e) {
++      if (e instanceof ApiError && e.kind === 'aborted') return;
++      status.textContent = '整理失败：' + (e?.message || e);
++      return;
++    }
++    if (!changes.length) return;
++    const list = el('div');
++    const applyBtn = el('button', { class: 'btn primary' });
++    const count = () => { const n = changes.filter((c) => c.on).length; applyBtn.textContent = n ? `写回 ${n} 条` : '写回'; applyBtn.disabled = !n; };
++    for (const c of changes) {
++      const lbl = el('span', { class: 'chg-lbl', text: describeChange(c, state) });
++      const cb = el('input', { type: 'checkbox' });
++      cb.checked = true;
++      cb.addEventListener('change', () => { c.on = cb.checked; item.classList.toggle('off', !c.on); count(); });
++      const txt = el('textarea', { class: 'chg-text' });
++      txt.value = c.text;
++      txt.addEventListener('input', () => { c.text = txt.value; });
++      let dest = null;
++      if (c.target === 'rules' && d.storyId) {
++        const b1 = el('button', { class: 'seg' }, '本故事规则');
++        const b2 = el('button', { class: 'seg' }, '全局');
++        const set = (v) => { c.dest = v; b1.classList.toggle('on', v === 'story'); b2.classList.toggle('on', v === 'global'); lbl.textContent = describeChange(c, state); };
++        b1.onclick = () => set('story');
++        b2.onclick = () => set('global');
++        set(c.dest || 'story');
++        dest = el('div', { class: 'segs' }, b1, b2);
++      }
++      const item = el('div', { class: 'card chg' },
++        el('label', { class: 'chg-head' }, cb, lbl),
++        dest,
++        c.target === 'world' && c.op === 'replace' && c.old ? el('div', { class: 'chg-old', text: '原文：' + c.old }) : null,
++        txt,
++        c.why ? el('div', { class: 'hint', text: c.why }) : null);
++      list.append(item);
++      setTimeout(() => autoGrow(txt, 0.3), 0);
++    }
++    s.body.append(list);
++    s.foot.replaceChildren(el('button', { class: 'btn ghost', onclick: () => s.close() }, '取消'), applyBtn);
++    count();
++    applyBtn.onclick = async () => {
++      applyBtn.disabled = true;
++      try {
++        const { done, newStory } = await applyChanges(d, changes);
++        const u = await getUndo();
++        if (done.length) d.messages.push({ role: 'note', content: '已写回：\n' + done.map((x) => '· ' + x).join('\n'), undo: u?.at });
++        await saveDiscussion(d);
++        s.close();
++        draw();
++        header();
++        toast('已写回');
++        if (newStory) {
++          const st = await openStoryEditor(null, newStory);
++          if (st) go('play/' + encodeURIComponent(st.id));
++        }
++      } catch (e) { toast('写回失败：' + (e?.message || e), 4000); applyBtn.disabled = false; }
++    };
++  }
++
++  async function makeNewStory() {
++    if (ctrl) return;
++    if (!d.messages.some((m) => m.role === 'assistant' && m.content?.trim())) { toast('先聊一聊新故事的设定，再生成'); return; }
++    toast('正在根据讨论整理新故事…', 4000);
++    try {
++      const { system } = await buildDiscussContext(d);
++      const msgs = chatMessages(d);
++      if (msgs.length && msgs[msgs.length - 1].role === 'user') msgs.push({ role: 'assistant', content: '（继续）' });
++      msgs.push({ role: 'user', content: NEWSTORY_PROMPT });
++      const r = await callModel(system, msgs, 6000);
++      recordUsage({ kind: '生成新故事', storyId: d.storyId, model: conn.model, usage: r.usage, cost: r.cost });
++      const prefill = parseNewStory(r.text);
++      const st = await openStoryEditor(null, prefill);
++      if (st) go('play/' + encodeURIComponent(st.id));
++    } catch (e) {
++      if (!(e instanceof ApiError && e.kind === 'aborted') && e?.message !== 'no conn') toast('生成失败：' + (e?.message || e), 4000);
++    }
++  }
++
++  async function chooseChapters() {
++    const k = await menu('讨论时带上最近几章原文？', [
++      { key: '0', label: '不带', hint: '只带设定、角色卡和前情档案，最省' },
++      { key: '3', label: '最近 3 章' }, { key: '5', label: '最近 5 章' }, { key: '10', label: '最近 10 章', hint: '每条消息都会多发这些字，费用明显增加' },
++    ]);
++    if (k === null) return;
++    d.chapters = Number(k);
++    await saveDiscussion(d);
++    header();
++  }
++
++  async function chooseConn() {
++    const list = await getConnections();
++    if (!list.length) { go('settings/new'); return; }
++    const k = await menu('这个讨论用哪个连接', list.map((c) => ({ key: c.id, label: connLabel(c), hint: c.model })));
++    if (k === null) return;
++    d.connId = k;
++    await saveDiscussion(d);
++    await pickConn();
++    header();
++  }
++
++  async function moreMenu() {
++    const k = await menu(d.title || storyTitle, [
++      { key: 'ctx', label: '查看发给模型的资料' },
++      d.storyId ? { key: 'go', label: '去这个故事' } : null,
++      { key: 'pop', label: '删掉最后一轮' },
++      { key: 'rename', label: '重命名' },
++      { key: 'del', label: '删除这个讨论', danger: true },
++    ]);
++    if (k === 'ctx') {
++      const { parts } = await buildDiscussContext(d);
++      const s = sheet({ title: '每条消息都会带上的资料' });
++      for (const p of parts) s.body.append(el('details', { class: 'card', style: { padding: '10px 12px' } }, el('summary', { style: { cursor: 'pointer', fontSize: '14px' }, text: `${p.label} · ${p.chars} 字` }), el('pre', { class: 'raw', text: p.text })));
++      s.foot.remove();
++    } else if (k === 'go') go('play/' + encodeURIComponent(d.storyId));
++    else if (k === 'pop') {
++      while (d.messages.length && d.messages[d.messages.length - 1].role !== 'user') d.messages.pop();
++      const u = d.messages.pop();
++      if (u) { ta.value = u.content; ta.dispatchEvent(new Event('input')); }
++      await saveDiscussion(d);
++      draw();
++    } else if (k === 'rename') {
++      const v = await promptText({ title: '重命名', value: d.title, multiline: false });
++      if (v?.trim()) { d.title = v.trim(); await saveDiscussion(d); header(); }
++    } else if (k === 'del' && confirm('删除这个讨论？已经写回的修改不受影响。')) { await deleteDiscussion(d.id); go('discuss'); }
++  }
++
++  // 上次生成中途离开的：标记一下
++  for (const m of d.messages) if (m.streaming) { delete m.streaming; m.error = m.error || '生成被中断了'; }
++  header();
++  draw();
++  return () => { destroyed = true; ctrl?.abort(); };
++}
+diff --git a/js/views/play.js b/js/views/play.js
+--- a/js/views/play.js
++++ b/js/views/play.js
+@@ -2,7 +2,7 @@
+ 
+ import { db, exportStory } from '../db.js';
+ import { el, uid, toast, menu, promptText, sheet, saveFile, autoGrow, insertAtCursor, approxTokens } from '../util.js';
+-import { resolveConnection, getConnections, connLabel, getPrefs, go, getModules, setCurrentStory } from '../state.js';
++import { resolveConnection, getConnections, connLabel, getPrefs, go, getModules, setCurrentStory, getGlobalMemo } from '../state.js';
+ import { streamWithRetry, ApiError } from '../api.js';
+ import { buildContext, CONTINUE_MSG, rewriteMsg, directorBlock, splitNames, latestCheckpoint } from '../prompt.js';
+ import { pendingChapters, runArchivist, archivingNow } from '../memory.js';
+@@ -29,6 +29,7 @@
+     pick: null,      // 正在“选一段往后重写”的回复 id
+     undoHead: null,  // 回退前的位置，用来撤销
+     modules: await getModules(),
++    globalMemo: await getGlobalMemo(),
+     archiving: null,   // 后台整理前情 { ctrl, text }
+     archiveError: null,
+   };
+@@ -405,7 +406,7 @@
+     try { await db.put('nodes', a); } catch {}
+     await saveStory();
+ 
+-    const ctx = buildContext(story, pathTo(a.parentId), { modules: st.modules, extra: extraDirector || '' });
++    const ctx = buildContext(story, pathTo(a.parentId), { modules: st.modules, extra: extraDirector || '', globalMemo: st.globalMemo });
+     if (extraDirector?.trim()) {
+       const last = ctx.messages[ctx.messages.length - 1];
+       if (last && last.role === 'user') last.content += directorBlock(extraDirector);
+@@ -940,7 +941,7 @@
+   }
+ 
+   function showContext() {
+-    const ctx = st.lastCtx || buildContext(story, headPath(), { modules: st.modules });
++    const ctx = st.lastCtx || buildContext(story, headPath(), { modules: st.modules, globalMemo: st.globalMemo });
+     const s = sheet({ title: st.lastCtx ? '上一轮发给模型的内容' : '下一轮会发给模型的内容' });
+     const i = ctx.info;
+     const block = (label, text, open = false) => {
+diff --git a/js/views/story-edit.js b/js/views/story-edit.js
+--- a/js/views/story-edit.js
++++ b/js/views/story-edit.js
+@@ -16,7 +16,7 @@
+ }
+ 
+ /** 打开设定编辑。返回保存后的故事；取消返回 null */
+-export function openStoryEditor(existing) {
++export function openStoryEditor(existing, prefill = null) {
+   return new Promise(async (resolve) => {
+     let saved = null;
+     const isNew = !existing;
+@@ -25,6 +25,10 @@
+       danmu: true, options: true, connectionId: null, headId: null,
+       createdAt: Date.now(), updatedAt: Date.now(), schema: 1,
+     };
++    if (!existing && prefill) {
++      for (const k of ['title', 'world', 'opening']) if (prefill[k]) story[k] = prefill[k];
++      if (prefill.rulesExtra?.trim()) story.rules = (story.rules || '').trim() + '\n\n' + prefill.rulesExtra.trim();
++    }
+     const conns = await getConnections();
+     const s = sheet({ title: isNew ? '新故事' : '故事设定', onClose: () => resolve(saved) });
+ 
+diff --git a/sw.js b/sw.js
+--- a/sw.js
++++ b/sw.js
+@@ -1,7 +1,7 @@
+ // 墨游 · 离线缓存
+ // 只缓存本站的页面文件；API 请求一律不经过缓存。
+ // 策略：先联网取最新（4 秒超时），取不到再用缓存——部署新版后刷新一次就能用上。
+-const CACHE = 'moyu-v0.6.3';
++const CACHE = 'moyu-v0.6.4';
+ const ASSETS = [
+   './',
+   './index.html',
+@@ -17,6 +17,8 @@
+   './js/cost.js',
+   './js/fanwai.js',
+   './js/memory.js',
++  './js/discuss.js',
++  './js/views/discuss.js',
+   './js/views/library.js',
+   './js/views/story-edit.js',
+   './js/views/story.js',
